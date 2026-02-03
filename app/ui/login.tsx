@@ -14,23 +14,33 @@ export function Login({ onLogin }: LoginProps) {
     studentId: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.email || !formData.password) {
-      alert("Please fill in all required fields");
-      return;
-    }
 
-    if (isSignUp && !formData.name) {
-      alert("Please enter your name");
-      return;
-    }
+    try {
+      const endpoint = isSignUp
+        ? "/api/auth/register"
+        : "/api/auth/login";
 
-    onLogin({
-      name: formData.name || formData.email.split("@")[0],
-      email: formData.email,
-    });
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Something went wrong");
+        return;
+      }
+
+      alert(data.message);
+      onLogin(data.user);
+    } catch (error) {
+      console.error(error);
+      alert("Connection failed!");
+    }
   };
 
   return (
@@ -42,11 +52,13 @@ export function Login({ onLogin }: LoginProps) {
             <GraduationCap className="w-12 h-12 text-blue-600" />
           </div>
           <h1 className="text-white text-3xl font-bold mb-2">KMITL</h1>
-          <p className="text-blue-50/90 font-medium text-lg">Facility Reservation System</p>
+          <p className="text-blue-50/90 font-medium text-lg">
+            Facility Reservation System
+          </p>
         </div>
 
-        {/* Login Form Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-white/20">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </h2>
@@ -60,7 +72,9 @@ export function Login({ onLogin }: LoginProps) {
             {isSignUp && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Full Name
+                  </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -70,14 +84,16 @@ export function Login({ onLogin }: LoginProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
+                      className="w-full pl-10 pr-4 py-3 border rounded-lg"
                       placeholder="Enter your full name"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Student ID (Optional)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Student ID (Optional)
+                  </label>
                   <div className="relative">
                     <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -86,7 +102,7 @@ export function Login({ onLogin }: LoginProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, studentId: e.target.value })
                       }
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
+                      className="w-full pl-10 pr-4 py-3 border rounded-lg"
                       placeholder="Enter student ID"
                     />
                   </div>
@@ -95,7 +111,9 @@ export function Login({ onLogin }: LoginProps) {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -105,14 +123,16 @@ export function Login({ onLogin }: LoginProps) {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
+                  className="w-full pl-10 pr-4 py-3 border rounded-lg"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -122,44 +142,34 @@ export function Login({ onLogin }: LoginProps) {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
+                  className="w-full pl-10 pr-4 py-3 border rounded-lg"
                   placeholder="Enter your password"
                 />
               </div>
             </div>
 
-            {!isSignUp && (
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer text-gray-700">
-                  <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                  <span>Remember me</span>
-                </label>
-                <button
-                  type="button"
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
-
             <button
               type="submit"
-              className="w-full py-3.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-bold text-lg shadow-md active:scale-[0.98]"
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
             >
               {isSignUp ? "Sign Up" : "Sign In"}
             </button>
           </form>
 
-          <div className="mt-8 text-center pt-6 border-t border-gray-100">
+          <div className="mt-6 text-center">
             <p className="text-gray-600">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}
               <button
+                className="text-blue-600 font-bold ml-1"
                 onClick={() => {
                   setIsSignUp(!isSignUp);
-                  setFormData({ name: "", email: "", password: "", studentId: "" });
+                  setFormData({
+                    name: "",
+                    email: "",
+                    password: "",
+                    studentId: "",
+                  });
                 }}
-                className="text-blue-600 hover:text-blue-800 font-bold ml-1"
               >
                 {isSignUp ? "Sign In" : "Sign Up"}
               </button>
@@ -167,8 +177,7 @@ export function Login({ onLogin }: LoginProps) {
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-blue-50/80 text-sm mt-8 font-medium">
+        <p className="text-center text-blue-50 text-sm mt-8">
           King Mongkut's Institute of Technology Ladkrabang
         </p>
       </div>
