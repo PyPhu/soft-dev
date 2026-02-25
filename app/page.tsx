@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Login } from "./ui/login";
 import { SportsCategory } from "./ui/sport";
 import { LibraryCategory } from "./ui/library";
 import { MembershipCategory } from "./ui/membership";
-import { ExerciseCategory } from "./ui/exercise"; // Integrated
-import { ReservationSummary } from "./ui/reservation_summary"; // Ensure this matches your file name
+import { ExerciseCategory } from "./ui/exercise"; 
+import { ReservationSummary } from "./ui/reservation_summary"; 
 import { LogOut, FileText } from "lucide-react"; 
 
 export default function Home() {
@@ -17,6 +17,38 @@ export default function Home() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
 
+  const fetchUserReservations = async () => {
+    if (!currentUser) return;
+    try {
+      const res = await fetch(`/api/auth/reservation?email=${encodeURIComponent(currentUser.email)}`);
+      
+      // Safety check: If the response isn't JSON, don't try to parse it
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Server did not return JSON. Check if the API route exists.");
+        return;
+      }
+
+      const data = await res.json();
+      
+      const combined = [
+        ...(data.owned || []).map((r: any) => ({ ...r, role: 'host' })),
+        ...(data.received || []).map((r: any) => ({ ...r, role: 'invitee' }))
+      ];
+      setReservations(combined);
+    } catch (err) {
+      console.error("Failed to sync reservations:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (showSummary && isLoggedIn) {
+      fetchUserReservations();
+      const interval = setInterval(fetchUserReservations, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [showSummary, isLoggedIn, currentUser]);
+
   const handleLogin = (userData: { name: string; email: string }) => {
     setCurrentUser(userData);
     setIsLoggedIn(true);
@@ -26,8 +58,13 @@ export default function Home() {
     setReservations((prev) => [...prev, reservation]);
   };
 
-  const handleCancelReservation = (id: string) => {
-    setReservations((prev) => prev.filter((res) => res.id !== id));
+  const handleCancelReservation = async (id: string) => {
+    try {
+        await fetch(`/api/reservation/${id}`, { method: 'DELETE' });
+        setReservations((prev) => prev.filter((res) => (res._id || res.id) !== id));
+    } catch (e) {
+        console.error("Delete failed");
+    }
   };
 
   if (!isLoggedIn) {
@@ -41,11 +78,11 @@ export default function Home() {
         reservations={reservations} 
         onBack={() => setShowSummary(false)} 
         onCancelReservation={handleCancelReservation}
+        refreshData={fetchUserReservations}
       />
     );
   }
 
-  // Dashboard View
   if (!activeCategory) {
     return (
       <main className="min-h-screen bg-[#f1f5f9] py-12 px-6">
@@ -91,7 +128,6 @@ export default function Home() {
     );
   }
 
-  // Category Selection View
   return (
     <main className="min-h-screen bg-gray-50">
       <nav className="p-4 bg-white border-b flex justify-between items-center px-8 shadow-sm">

@@ -1,8 +1,9 @@
+//app/api/register/route.ts
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { connectDB } from "@/lib/mongodb";
+import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 
 export async function POST(req: Request) {
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { message: "User already exists" },
-        { status: 409 }
+
       );
     }
 
