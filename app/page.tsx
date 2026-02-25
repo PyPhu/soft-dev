@@ -11,65 +11,75 @@ import { LogOut, FileText } from "lucide-react";
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; id?: string; _id?: string } | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  
   const [reservations, setReservations] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
 
   const fetchUserReservations = async () => {
     if (!currentUser) return;
     try {
-      const res = await fetch(`/api/auth/reservation?email=${encodeURIComponent(currentUser.email)}`);
-      
-      // Safety check: If the response isn't JSON, don't try to parse it
+      // UPDATED PATH: removed /auth
+      const res = await fetch(`/api/reservation?email=${encodeURIComponent(currentUser.email)}`);
       const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error("Server did not return JSON. Check if the API route exists.");
+      
+      if (!res.ok || !contentType || !contentType.includes("application/json")) {
+        console.error("Fetch failed or non-JSON response");
         return;
       }
 
       const data = await res.json();
-      
       const combined = [
         ...(data.owned || []).map((r: any) => ({ ...r, role: 'host' })),
         ...(data.received || []).map((r: any) => ({ ...r, role: 'invitee' }))
       ];
       setReservations(combined);
     } catch (err) {
-      console.error("Failed to sync reservations:", err);
+      console.error("Sync failed:", err);
     }
   };
 
   useEffect(() => {
-    if (showSummary && isLoggedIn) {
+    if (isLoggedIn) {
       fetchUserReservations();
       const interval = setInterval(fetchUserReservations, 5000);
       return () => clearInterval(interval);
     }
-  }, [showSummary, isLoggedIn, currentUser]);
+  }, [isLoggedIn, currentUser]);
 
-  const handleLogin = (userData: { name: string; email: string }) => {
+  const handleLogin = (userData: any) => {
     setCurrentUser(userData);
     setIsLoggedIn(true);
   };
 
-  const handleAddReservation = (reservation: any) => {
-    setReservations((prev) => [...prev, reservation]);
-  };
-
   const handleCancelReservation = async (id: string) => {
+    if (!id) {
+      console.error("No ID provided for cancellation");
+      return;
+    }
+
+    if (!confirm("Cancel this booking?")) return;
+    
     try {
-        await fetch(`/api/reservation/${id}`, { method: 'DELETE' });
-        setReservations((prev) => prev.filter((res) => (res._id || res.id) !== id));
+        // UPDATED PATH: removed /auth
+        const res = await fetch(`/api/reservation?id=${id}`, { 
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (res.ok) {
+          setReservations((prev) => prev.filter((res) => (res._id || res.id || res.reservationId) !== id));
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.error("Server error:", errorData.message || res.statusText);
+          alert("Could not cancel: " + (errorData.message || "Server Error"));
+        }
     } catch (e) {
-        console.error("Delete failed");
+        console.error("Network error during delete:", e);
     }
   };
 
-  if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
-  }
+  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
 
   if (showSummary) {
     return (
@@ -100,7 +110,7 @@ export default function Home() {
 
         <header className="max-w-6xl mx-auto mb-12 bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">KMITL Facility Reservation System</h1>
-          <p className="text-gray-500 font-medium">Reserve facilities at King Mongkut's Institute of Technology Ladkrabang</p>
+          <p className="text-gray-500 font-medium">King Mongkut's Institute of Technology Ladkrabang</p>
           <div className="mt-4 inline-block bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">
             <p className="text-xs text-gray-400 font-medium">
               Logged in as: <span className="text-blue-600 font-semibold">{currentUser?.email}</span>
@@ -134,7 +144,7 @@ export default function Home() {
         <button onClick={() => setActiveCategory(null)} className="text-[#0070f3] font-bold flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
           ← Back to Categories
         </button>
-        <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">KMITL Facility Reservation</h1>
+        <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">Facility Reservation</h1>
         <div className="flex items-center gap-6">
           <button 
             onClick={() => setShowSummary(true)}
@@ -149,10 +159,10 @@ export default function Home() {
       </nav>
 
       <div className="p-8">
-        {activeCategory === 'sports' && <SportsCategory user={currentUser!} onAddReservation={handleAddReservation} />}
-        {activeCategory === 'library' && <LibraryCategory user={currentUser!} onAddReservation={handleAddReservation} />}
-        {activeCategory === 'membership' && <MembershipCategory user={currentUser!} onAddReservation={handleAddReservation} />}
-        {activeCategory === 'exercise' && <ExerciseCategory user={currentUser!} onAddReservation={handleAddReservation} />}
+        {activeCategory === 'sports' && <SportsCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
+        {activeCategory === 'library' && <LibraryCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
+        {activeCategory === 'membership' && <MembershipCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
+        {activeCategory === 'exercise' && <ExerciseCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
       </div>
     </main>
   );

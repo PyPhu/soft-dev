@@ -18,9 +18,10 @@ export function Login({ onLogin }: LoginProps) {
     e.preventDefault();
 
     try {
+      // UPDATED: Removed /auth/ from the paths
       const endpoint = isSignUp
-        ? "/api/auth/register"
-        : "/api/auth/login";
+        ? "/api/register"
+        : "/api/login";
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -46,7 +47,6 @@ export function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen w-full bg-[#FF9900] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg">
             <GraduationCap className="w-12 h-12 text-blue-600" />
@@ -57,7 +57,6 @@ export function Login({ onLogin }: LoginProps) {
           </p>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
             {isSignUp ? "Create Account" : "Welcome Back"}

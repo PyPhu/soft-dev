@@ -50,8 +50,8 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
     };
 
     try {
-      // 1. Save Reservation to MongoDB
-      const res = await fetch("/api/auth/reservation", {
+      // UPDATED PATH: Removed /auth/ to match your folder deletion
+      const res = await fetch("/api/reservation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reservationData),
@@ -88,7 +88,7 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-          <button onClick={onBack} className="text-[#0070f3] font-black flex items-center gap-2 shrink-0">
+          <button onClick={onBack} className="text-[#0070f3] font-black flex items-center gap-2 shrink-0 hover:translate-x-[-4px] transition-transform">
             <ChevronLeft size={20} /> Back to Dashboard
           </button>
           <h2 className="text-2xl font-black text-gray-900">Sports Facilities</h2>
@@ -118,7 +118,7 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <button onClick={() => setSelectedSport(null)} className="mb-6 text-[#0070f3] font-bold flex items-center gap-2">
+      <button onClick={() => setSelectedSport(null)} className="mb-6 text-[#0070f3] font-bold flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
         ← Back to Sports
       </button>
 
@@ -134,7 +134,7 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block mb-2 font-black text-gray-700 uppercase text-[10px] tracking-widest">Host Name</label>
-            <input type="text" readOnly value={user.name} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-500" />
+            <input type="text" readOnly value={user.name} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-500 cursor-not-allowed" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -142,14 +142,14 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
               <label className="block mb-2 font-black text-gray-700 uppercase text-[10px] tracking-widest flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#0070f3]" /> Date
               </label>
-              <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold" min={new Date().toISOString().split("T")[0]} />
+              <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none" min={new Date().toISOString().split("T")[0]} />
             </div>
 
             <div>
               <label className="block mb-2 font-black text-gray-700 uppercase text-[10px] tracking-widest flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#0070f3]" /> Time Slot
               </label>
-              <select required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold appearance-none" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })}>
+              <select required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold appearance-none outline-none focus:ring-2 focus:ring-blue-100" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })}>
                 <option value="">Select Time</option>
                 {Array.from({ length: 14 }, (_, i) => i + 6).map((hour) => (
                   <option key={hour} value={`${hour}:00`}>{hour.toString().padStart(2, '0')}:00</option>
@@ -163,16 +163,16 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
               <Mail className="w-4 h-4 text-[#0070f3]" /> Invite Participants
             </label>
             <div className="flex gap-2 mb-4">
-              <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="flex-1 px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold" placeholder="email@example.com" />
-              <button type="button" onClick={addInvitation} className="px-6 py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-black transition-colors">Add</button>
+              <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className="flex-1 px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" placeholder="email@example.com" />
+              <button type="button" onClick={addInvitation} className="px-6 py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-black transition-all active:scale-95 shadow-md">Add</button>
             </div>
 
             {invitations.length > 0 && (
               <div className="grid grid-cols-1 gap-2 mb-4">
                 {invitations.map((inv) => (
-                  <div key={inv.email} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                  <div key={inv.email} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-2xl animate-in fade-in slide-in-from-top-2">
                     <span className="text-sm font-bold text-[#0070f3]">{inv.email}</span>
-                    <button type="button" onClick={() => removeInvitation(inv.email)} className="text-red-500"><X className="w-5 h-5" /></button>
+                    <button type="button" onClick={() => removeInvitation(inv.email)} className="text-red-500 hover:bg-red-50 p-1 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
                   </div>
                 ))}
               </div>

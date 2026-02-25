@@ -1,32 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Dumbbell, Waves, Calendar, Users, Clock, ChevronLeft, Tag, Info } from "lucide-react";
+import { Dumbbell, Waves, Calendar, Users, Clock, ChevronLeft, Tag } from "lucide-react";
 
 type ExerciseFacility = "fitness" | "swimming";
 
 interface User {
   name: string;
   email: string;
-}
-
-interface ExerciseReservation {
-  type: "exercise";
-  id: string;
-  facility: string;
-  date: string;
-  time: string;
-  participants: number;
-  userName: string;
+  id?: string;
+  _id?: string;
 }
 
 interface ExerciseCategoryProps {
   user: User;
-  onAddReservation: (reservation: ExerciseReservation) => void;
+  onAddReservation: (reservation: any) => void;
   onBack: () => void;
 }
 
-// --- NEW BROCHURE COMPONENT ---
 function ExerciseBrochure() {
   const facilities = [
     {
@@ -34,14 +25,12 @@ function ExerciseBrochure() {
       icon: <Dumbbell className="text-[#0070f3]" size={32} />,
       hours: "06:00 - 21:00",
       price: "20 THB",
-      details: ["Sneakers required", "Bring a towel"],
     },
     {
       title: "Swimming Pool",
       icon: <Waves className="text-cyan-500" size={32} />,
       hours: "06:00 - 20:00",
       price: "30 THB",
-      details: ["Swimwear only", "Shower first"],
     }
   ];
 
@@ -70,7 +59,7 @@ function ExerciseBrochure() {
 export function ExerciseCategory({ user, onAddReservation, onBack }: ExerciseCategoryProps) {
   const [selectedFacility, setSelectedFacility] = useState<ExerciseFacility | null>(null);
   const [formData, setFormData] = useState({
-    date: "2026-01-13", // Changed to YYYY-MM-DD for native date picker
+    date: new Date().toISOString().split("T")[0],
     time: "",
     participants: 1,
   });
@@ -80,41 +69,50 @@ export function ExerciseCategory({ user, onAddReservation, onBack }: ExerciseCat
     swimming: { name: "Swimming Pool", maxCapacity: 35, icon: Waves },
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFacility) return;
     const config = facilityConfig[selectedFacility];
 
-    const newReservation: ExerciseReservation = {
-      type: "exercise",
-      id: Date.now().toString(),
-      facility: config.name,
+    // UPDATED: Now sends to the real database API
+    const reservationData = {
+      sport: config.name,
       date: formData.date,
-      time: formData.time,
+      timeSlot: formData.time,
+      hostName: user.name,
       participants: formData.participants,
-      userName: user.name,
     };
 
-    onAddReservation(newReservation);
-    alert(`Reservation Confirmed!\nFacility: ${config.name}\nDate: ${formData.date}\nTime: ${formData.time}`);
-    setFormData({ date: "2026-01-13", time: "", participants: 1 });
-    setSelectedFacility(null);
+    try {
+      const res = await fetch("/api/reservation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reservationData),
+      });
+
+      if (!res.ok) throw new Error("Failed to save");
+      const savedRes = await res.json();
+
+      onAddReservation(savedRes);
+      alert(`Reservation Confirmed!\nFacility: ${config.name}`);
+      setFormData({ date: new Date().toISOString().split("T")[0], time: "", participants: 1 });
+      setSelectedFacility(null);
+    } catch (err) {
+      console.error(err);
+      alert("Error saving reservation.");
+    }
   };
 
   if (!selectedFacility) {
     return (
       <div className="max-w-5xl mx-auto p-4 md:p-6">
-        {/* RESPONSIVE HEADER */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
             <button onClick={onBack} className="text-[#0070f3] font-black flex items-center gap-2 shrink-0">
                 <ChevronLeft size={20} /> <span className="hidden sm:inline">Back to Dashboard</span><span className="sm:hidden">Back</span>
             </button>
             <h2 className="text-xl md:text-2xl font-black text-gray-900">Exercise Facilities</h2>
         </div>
-
-        {/* BROCHURE SECTION */}
         <ExerciseBrochure />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(facilityConfig).map(([key, config]) => {
             const Icon = config.icon;
@@ -145,14 +143,11 @@ export function ExerciseCategory({ user, onAddReservation, onBack }: ExerciseCat
 
   return (
     <div className="max-w-2xl mx-auto p-4 md:p-6">
-      <button
-        onClick={() => setSelectedFacility(null)}
-        className="mb-6 text-[#0070f3] font-bold flex items-center gap-1 hover:underline"
-      >
+      <button onClick={() => setSelectedFacility(null)} className="mb-6 text-[#0070f3] font-bold flex items-center gap-1 hover:underline">
         <ChevronLeft size={20} /> Back to Selection
       </button>
 
-      <div className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-10 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-10 shadow-sm">
         <div className="flex items-center gap-4 mb-10">
           <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-[#0070f3] shrink-0">
             <Icon size={28} />
@@ -168,13 +163,12 @@ export function ExerciseCategory({ user, onAddReservation, onBack }: ExerciseCat
             <label className="flex items-center gap-2 text-sm font-black text-gray-700 mb-3">
               <Calendar size={18} className="text-gray-400" /> Date
             </label>
-            {/* FIXED DATE BOX: Added max-w-full and box-border */}
             <input
               type="date"
               required
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full max-w-full box-border px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none"
             />
           </div>
 
@@ -186,7 +180,7 @@ export function ExerciseCategory({ user, onAddReservation, onBack }: ExerciseCat
               required
               value={formData.time}
               onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-              className="w-full max-w-full box-border px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none appearance-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none appearance-none"
             >
               <option value="">Select time</option>
               {Array.from({ length: 14 }, (_, i) => i + 6).map((hour) => (
@@ -208,14 +202,13 @@ export function ExerciseCategory({ user, onAddReservation, onBack }: ExerciseCat
               max={config.maxCapacity}
               value={formData.participants}
               onChange={(e) => setFormData({ ...formData, participants: parseInt(e.target.value) })}
-              className="w-full max-w-full box-border px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none"
             />
           </div>
 
           <button
             type="submit"
-            disabled={!formData.time}
-            className="w-full py-5 bg-[#0070f3] text-white rounded-2xl font-black text-lg shadow-lg shadow-blue-100 hover:bg-blue-600 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full py-5 bg-[#0070f3] text-white rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 transition-all active:scale-95"
           >
             Confirm Reservation
           </button>

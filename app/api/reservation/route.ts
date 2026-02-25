@@ -15,7 +15,6 @@ export async function GET(req: Request) {
     const user = await User.findOne({ email });
     if (!user) return NextResponse.json({ owned: [], received: [] });
 
-    // 1. Get reservations where user is Host
     const ownedReservations = await Reservation.find({ hostName: user.name }).lean();
     
     const ownedWithInvites = await Promise.all(ownedReservations.map(async (res: any) => {
@@ -34,7 +33,6 @@ export async function GET(req: Request) {
       };
     }));
 
-    // 2. Get invitations sent TO user
     const receivedInvites = await Invitation.find({ 
       receiver: user._id, 
       status: "pending" 
@@ -64,13 +62,28 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    
-    // Explicitly saves to 'reservations' collection in Atlas
     const reservation = await Reservation.create(body);
-    
     return NextResponse.json(reservation, { status: 201 });
   } catch (error: any) {
     console.error("POST_RESERVATION_ERROR:", error);
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}
+
+// --- ADDED DELETE METHOD ---
+export async function DELETE(req: Request) {
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) return NextResponse.json({ message: "ID required" }, { status: 400 });
+
+    await Reservation.findByIdAndDelete(id);
+    await Invitation.deleteMany({ reservation: id });
+
+    return NextResponse.json({ message: "Canceled" }, { status: 200 });
+  } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
