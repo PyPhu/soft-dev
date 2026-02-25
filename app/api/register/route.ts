@@ -1,4 +1,3 @@
-//app/api/register/route.ts
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
@@ -8,11 +7,20 @@ import User from "@/models/User";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, studentId } = await req.json();
+    const { name, email, password, confirmPassword, studentId } = await req.json();
 
-    if (!name || !email || !password) {
+    // ADDED: Validate all required fields including confirmation
+    if (!name || !email || !password || !confirmPassword) {
       return NextResponse.json(
         { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // ADDED: Server-side password match check
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { message: "Passwords do not match" },
         { status: 400 }
       );
     }
@@ -23,7 +31,7 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { message: "User already exists" },
-
+        { status: 400 } // Added status code
       );
     }
 
