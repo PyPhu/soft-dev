@@ -43,7 +43,7 @@ export function ExerciseCategory({ onBack }: ExerciseCategoryProps) {
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <button
           onClick={onBack}
-          className="text-[#0070f3] font-black flex items-center gap-2 shrink-0"
+          className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 shrink-0"
         >
           <ChevronLeft size={20} />
           <span className="hidden sm:inline">Back to Dashboard</span>

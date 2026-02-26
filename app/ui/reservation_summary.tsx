@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   Calendar, Clock, Users, MapPin, Coffee, 
-  Dumbbell, Trophy, Trash2, AlertCircle, Check, X, Timer 
+  Dumbbell, Trophy, Trash2, AlertCircle, Check, X, Timer, ChevronLeft 
 } from "lucide-react";
 
 export function ReservationSummary({ user, reservations, onBack, onCancelReservation, refreshData }: any) {
@@ -43,8 +43,12 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <button onClick={onBack} className="text-[#0070f3] font-bold flex items-center gap-2 hover:underline">
-            ← Back to Categories
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+          >
+            <ChevronLeft size={16} />
+            Back to Categories
           </button>
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             Welcome, <span className="text-gray-900 font-bold">{user.name}</span>

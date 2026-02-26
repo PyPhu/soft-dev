@@ -234,7 +234,7 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
           setSelectedSpaceId(null);
           setSelectedUnit(null);
         }}
-        className="text-[#0070f3] font-bold mb-4 flex items-center gap-1 hover:underline"
+        className="mb-4 inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
       >
         <ChevronLeft size={18} /> Back to Locations
       </button>

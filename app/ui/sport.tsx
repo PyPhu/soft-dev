@@ -116,8 +116,12 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <button onClick={() => setSelectedSport(null)} className="mb-6 text-[#0070f3] font-bold flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
-        ← Back to Sports
+      <button
+        onClick={() => setSelectedSport(null)}
+        className="mb-6 inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+      >
+        <ChevronLeft size={16} />
+        Back to Sports
       </button>
 
       <div className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm">

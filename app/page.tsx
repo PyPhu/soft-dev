@@ -6,7 +6,7 @@ import { SportsCategory } from "./ui/sport";
 import { MembershipCategory } from "./ui/coworkspace";
 import { ExerciseCategory } from "./ui/exercise"; 
 import { ReservationSummary } from "./ui/reservation_summary"; 
-import { LogOut, FileText } from "lucide-react"; 
+import { LogOut, FileText, ChevronLeft } from "lucide-react"; 
 import { useSession, signOut } from "next-auth/react"; // ADDED
 
 export default function Home() {
@@ -165,8 +165,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <nav className="p-4 bg-white border-b flex justify-between items-center px-8 shadow-sm">
-        <button onClick={() => setActiveCategory(null)} className="text-[#0070f3] font-bold flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
-          ← Back to Categories
+        <button
+          onClick={() => setActiveCategory(null)}
+          className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+        >
+          <ChevronLeft size={16} />
+          Back to Categories
         </button>
         <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">Facility Reservation</h1>
         <div className="flex items-center gap-6">
