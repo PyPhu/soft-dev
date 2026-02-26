@@ -146,8 +146,8 @@ export function Login({ onLogin }: LoginProps) {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full pl-10 pr-4 py-2.5 border rounded-lg outline-none focus:border-blue-500 text-sm" placeholder="Email" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-700" />
+                <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full pl-10 pr-4 py-2.5 border rounded-lg outline-none focus:border-blue-500 text-sm text-gray-700" placeholder="Email" />
               </div>
             </div>
 
@@ -166,13 +166,13 @@ export function Login({ onLogin }: LoginProps) {
                 )}
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-700" />
                 <input 
                   type={showPassword ? "text" : "password"} 
                   required 
                   value={formData.password} 
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
-                  className="w-full pl-10 pr-10 py-2.5 border rounded-lg outline-none focus:border-blue-500 text-sm" 
+                  className="w-full pl-10 pr-10 py-2.5 border rounded-lg outline-none focus:border-blue-500 text-sm text-gray-700" 
                   placeholder="Password" 
                 />
                 <button 
@@ -243,11 +243,11 @@ export function Login({ onLogin }: LoginProps) {
 
             <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-gray-200"></div>
-                <span className="flex-shrink mx-4 text-gray-400 text-xs uppercase font-medium">Or</span>
+                <span className="flex-shrink mx-4 text-gray-700 text-xs uppercase font-medium">Or</span>
                 <div className="flex-grow border-t border-gray-200"></div>
             </div>
 
-            <button type="button" onClick={() => signIn("google")} className="w-full py-3 border border-gray-300 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+            <button type="button" onClick={() => signIn("google")} className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
               <Chrome className="w-5 h-5 text-red-500" /> 
               {isSignUp ? "Sign up with Google" : "Sign in with Google"}
             </button>
