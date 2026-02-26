@@ -79,7 +79,10 @@ export async function DELETE(req: Request) {
 
     if (!id) return NextResponse.json({ message: "ID required" }, { status: 400 });
 
-    await Reservation.findByIdAndDelete(id);
+    await Reservation.findByIdAndUpdate(id, {
+  status: "cancelled",
+  cancelledAt: new Date(),
+});
     await Invitation.deleteMany({ reservation: id });
 
     return NextResponse.json({ message: "Canceled" }, { status: 200 });

@@ -38,6 +38,7 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
     </div>
   );
 
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
@@ -195,8 +196,16 @@ function ReservationSection({ title, icon, children }: any) {
 
 function ReservationCard({ res, title, date, time, extra, isCancelling, onCancelClick, onConfirmCancel, onAbortCancel, onRespond }: any) {
     const isHost = res.role === 'host';
+    const ONE_HOUR = 60 * 60 * 1000;
     const [timeLeft, setTimeLeft] = useState("");
     const autoDeclinedRef = useRef(false);
+
+    const isExpiredCancelled =
+    res.status === "cancelled" &&
+    res.cancelledAt &&
+    Date.now() - new Date(res.cancelledAt).getTime() > ONE_HOUR;
+
+    if (isExpiredCancelled) return null;
 
     useEffect(() => {
         if (isHost || !res.expiresAt) return;
@@ -223,7 +232,8 @@ function ReservationCard({ res, title, date, time, extra, isCancelling, onCancel
     }, [res.expiresAt, isHost, res.invitationId, onRespond]);
 
     return (
-        <div className={`bg-white rounded-[2.5rem] p-8 border transition-all ${isCancelling ? 'border-red-200 ring-4 ring-red-50' : 'border-gray-100 shadow-sm'} ${res.status === 'cancelled' ? 'opacity-50 grayscale' : ''}`}>
+        <div className={`bg-white rounded-[2.5rem] p-8 border transition-all ${isCancelling ? 'border-red-200 ring-4 ring-red-50' : 'border-gray-100 shadow-sm'} ${res.status === 'cancelled' ? 'opacity-40 grayscale pointer-events-none'
+  : ''}`}>
             <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                 <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3">

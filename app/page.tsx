@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Login } from "./ui/login";
 import { SportsCategory } from "./ui/sport";
-import { LibraryCategory } from "./ui/library";
 import { MembershipCategory } from "./ui/membership";
 import { ExerciseCategory } from "./ui/exercise"; 
 import { ReservationSummary } from "./ui/reservation_summary"; 
@@ -68,7 +67,13 @@ export default function Home() {
         });
 
         if (res.ok) {
-          setReservations((prev) => prev.filter((res) => (res._id || res.id || res.reservationId) !== id));
+          setReservations(prev =>
+  prev.map(r =>
+    (r._id || r.id) === id
+      ? { ...r, status: "cancelled", cancelledAt: new Date().toISOString() }
+      : r
+  )
+);
         } else {
           const errorData = await res.json().catch(() => ({}));
           console.error("Server error:", errorData.message || res.statusText);
@@ -118,17 +123,16 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <CategoryCard title="Exercise" desc="Fitness Center & Swimming Pool" icon="🏋️‍♂️" bgColor="bg-[#0070f3]" onClick={() => setActiveCategory('exercise')} />
           <CategoryCard title="Sports" desc="Football, Volleyball, Badminton" icon="🏆" bgColor="bg-[#22c55e]" onClick={() => setActiveCategory('sports')} />
-          <CategoryCard title="Library" desc="Search & Reserve Books" icon="📖" bgColor="bg-[#a855f7]" onClick={() => setActiveCategory('library')} />
-          <CategoryCard title="Membership" desc="Canteen Table Booking" icon="👥" bgColor="bg-[#f97316]" onClick={() => setActiveCategory('membership')} />
+          <CategoryCard title="Co-Working" desc="Canteen Table Booking" icon="👥" bgColor="bg-[#f97316]" onClick={() => setActiveCategory('membership')} />
         </div>
 
         <div className="max-w-6xl mx-auto bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-100">
           <h2 className="text-center text-lg font-bold text-gray-900 mb-12 uppercase tracking-wide">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <Step num="1" color="bg-blue-50 text-blue-500" title="Select Category" desc="Choose from Exercise, Sports, Library, or Membership" />
+            <Step num="1" color="bg-blue-50 text-blue-500" title="Select Category" desc="Choose from Exercise, Sports, Co-Working" />
             <Step num="2" color="bg-green-50 text-green-500" title="Choose Facility" desc="Select the specific facility you want to reserve" />
             <Step num="3" color="bg-purple-50 text-purple-500" title="Fill Details" desc="Enter date, time, and other required information" />
             <Step num="4" color="bg-orange-50 text-orange-500" title="Confirm" desc="Review and confirm your reservation" />
@@ -160,7 +164,6 @@ export default function Home() {
 
       <div className="p-8">
         {activeCategory === 'sports' && <SportsCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
-        {activeCategory === 'library' && <LibraryCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
         {activeCategory === 'membership' && <MembershipCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
         {activeCategory === 'exercise' && <ExerciseCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
       </div>
