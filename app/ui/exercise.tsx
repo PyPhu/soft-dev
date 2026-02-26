@@ -157,14 +157,7 @@ export function ExerciseCategory({
     return (
       <div className="max-w-5xl mx-auto p-4 md:p-6">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-          <button
-            onClick={onBack}
-            className="text-[#0070f3] font-black flex items-center gap-2 shrink-0"
-          >
-            <ChevronLeft size={20} />{" "}
-            <span className="hidden sm:inline">Back to Dashboard</span>
-            <span className="sm:hidden">Back</span>
-          </button>
+          
           <h2 className="text-xl md:text-2xl font-black text-gray-900">
             Exercise Facilities
           </h2>
