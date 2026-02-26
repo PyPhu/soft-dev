@@ -1,17 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Dumbbell,
-  Waves,
-  Calendar,
-  Users,
-  Clock,
-  ChevronLeft,
-  Tag,
-} from "lucide-react";
-
-type ExerciseFacility = "fitness" | "swimming";
+import { ChevronLeft, Clock, Dumbbell, Waves, Info } from "lucide-react";
 
 interface User {
   name: string;
@@ -22,271 +11,134 @@ interface User {
 
 interface ExerciseCategoryProps {
   user: User;
-  onAddReservation: (reservation: any) => void;
+  onAddReservation: (reservation: unknown) => void;
   onBack: () => void;
 }
 
-function ExerciseBrochure() {
-  const facilities = [
-    {
-      title: "KMITL Fitness Gym",
-      icon: <Dumbbell className="text-[#0070f3]" size={32} />,
-      hours: "06:00 - 21:00",
-      price: "20 THB",
-    },
-    {
-      title: "Swimming Pool",
-      icon: <Waves className="text-cyan-500" size={32} />,
-      hours: "06:00 - 20:00",
-      price: "30 THB",
-    },
-  ];
+const serviceHours = [
+  { period: "Morning", time: "08:30 - 12:00" },
+  { period: "Afternoon", time: "13:00 - 16:00" },
+  { period: "Evening", time: "16:01 - 20:00" },
+];
 
+const gymFees = [
+  { category: "Category 1", oneMonth: "1,000", sixMonths: "3,300", twelveMonths: "4,500" },
+  { category: "Category 2", oneMonth: "1,200", sixMonths: "4,200", twelveMonths: "6,000" },
+  { category: "Category 3", oneMonth: "1,300", sixMonths: "4,200", twelveMonths: "7,000" },
+  { category: "Category 4*", oneMonth: "1,500", sixMonths: "4,500", twelveMonths: "7,500" },
+  { category: "Non-Member", oneMonth: "1,900", sixMonths: "6,000", twelveMonths: "10,000" },
+];
+
+const poolFees = [
+  { category: "Category 1", morning: "30", afternoon: "50", evening: "80" },
+  { category: "Category 2", morning: "40", afternoon: "60", evening: "90" },
+  { category: "Category 3", morning: "40", afternoon: "60", evening: "90" },
+  { category: "Category 4", morning: "60", afternoon: "80", evening: "110" },
+  { category: "Non-Member", morning: "80", afternoon: "100", evening: "140" },
+];
+
+export function ExerciseCategory({ onBack }: ExerciseCategoryProps) {
   return (
-    <div className="grid sm:grid-cols-2 gap-4 mb-10">
-      {facilities.map((f, i) => (
-        <div
-          key={i}
-          className="bg-white p-6 rounded-[2rem] border border-gray-100 flex items-center gap-5 shadow-sm"
+    <div className="max-w-6xl mx-auto p-4 md:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <button
+          onClick={onBack}
+          className="text-[#0070f3] font-black flex items-center gap-2 shrink-0"
         >
-          <div className="bg-gray-50 p-4 rounded-2xl shrink-0">{f.icon}</div>
-          <div className="min-w-0">
-            <h4 className="font-black text-gray-900 truncate text-base md:text-lg">
-              {f.title}
-            </h4>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className="text-[10px] font-black text-[#0070f3] bg-blue-50 px-2 py-1 rounded-md flex items-center gap-1">
-                <Clock size={10} /> {f.hours}
-              </span>
-              <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
-                <Tag size={10} /> {f.price}
-              </span>
+          <ChevronLeft size={20} />
+          <span className="hidden sm:inline">Back to Dashboard</span>
+          <span className="sm:hidden">Back</span>
+        </button>
+        <h2 className="text-xl md:text-2xl font-black text-gray-900">KM Wellness & Sports Center</h2>
+      </div>
+
+      <div className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-10 shadow-sm mb-8">
+        <p className="text-gray-600 font-bold text-sm md:text-base">
+          King Mongkut&apos;s Institute of Technology Ladkrabang (KMITL)
+        </p>
+      </div>
+
+      <section className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 shadow-sm mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Clock className="text-[#0070f3]" size={22} />
+          <h3 className="text-lg md:text-xl font-black text-gray-900">Service Hours</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {serviceHours.map((slot) => (
+            <div key={slot.period} className="bg-gray-50 rounded-2xl border border-gray-100 p-5">
+              <p className="text-[11px] uppercase tracking-wider text-gray-400 font-black mb-2">{slot.period}</p>
+              <p className="text-base font-black text-gray-900">{slot.time}</p>
             </div>
-          </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
-}
+      </section>
 
-export function ExerciseCategory({
-  user,
-  onAddReservation,
-  onBack,
-}: ExerciseCategoryProps) {
-  const [selectedFacility, setSelectedFacility] =
-    useState<ExerciseFacility | null>(null);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split("T")[0],
-    time: "",
-    participants: 1,
-  });
-
-  const facilityConfig = {
-    fitness: { name: "Fitness Center", maxCapacity: 30, icon: Dumbbell },
-    swimming: { name: "Swimming Pool", maxCapacity: 35, icon: Waves },
-  };
-
-  const fetchBookedSlots = async (date: string, facilityName: string) => {
-    try {
-      const res = await fetch(
-        `/api/reservation?date=${date}&sport=${encodeURIComponent(facilityName)}`,
-      );
-      const data = await res.json();
-      setBookedSlots(data.slots || []);
-    } catch (err) {
-      console.error("Failed to fetch booked slots", err);
-      setBookedSlots([]);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFacility) return;
-    const config = facilityConfig[selectedFacility];
-
-    // UPDATED: Now sends to the real database API
-    const reservationData = {
-      sport: config.name,
-      date: formData.date,
-      timeSlot: formData.time,
-      hostName: user.name,
-      participants: formData.participants,
-    };
-
-    try {
-      const res = await fetch("/api/reservation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reservationData),
-      });
-
-      if (res.status === 409) {
-        alert(
-          "❌ This time slot is already booked. Please choose another time.",
-        );
-        return;
-      }
-
-      if (!res.ok) throw new Error("Failed to save");
-      const savedRes = await res.json();
-
-      onAddReservation(savedRes);
-      alert(`Reservation Confirmed!\nFacility: ${config.name}`);
-      setFormData({
-        date: new Date().toISOString().split("T")[0],
-        time: "",
-        participants: 1,
-      });
-      setSelectedFacility(null);
-    } catch (err) {
-      console.error(err);
-      alert("Error saving reservation.");
-    }
-  };
-
-  useEffect(() => {
-    if (selectedFacility) {
-      const config = facilityConfig[selectedFacility];
-      fetchBookedSlots(formData.date, config.name);
-    }
-  }, [formData.date, selectedFacility]);
-
-  if (!selectedFacility) {
-    return (
-      <div className="max-w-5xl mx-auto p-4 md:p-6">
-        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-          
-          <h2 className="text-xl md:text-2xl font-black text-gray-900">
-            Exercise Facilities
-          </h2>
+      <section className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 shadow-sm mb-8 overflow-x-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <Dumbbell className="text-[#0070f3]" size={22} />
+          <h3 className="text-lg md:text-xl font-black text-gray-900">Gym Membership Fees (THB / Person)</h3>
         </div>
-        <ExerciseBrochure />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries(facilityConfig).map(([key, config]) => {
-            const Icon = config.icon;
-            return (
-              <button
-                key={key}
-                onClick={() => setSelectedFacility(key as ExerciseFacility)}
-                className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all text-left group"
-              >
-                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                  <Icon size={32} />
-                </div>
-                <h3 className="text-xl font-black text-gray-900 mb-2">
-                  {config.name}
-                </h3>
-                <div className="flex items-center gap-2 text-gray-400 text-sm font-bold">
-                  <Users size={16} />
-                  <span>Max {config.maxCapacity} users</span>
-                </div>
-              </button>
-            );
-          })}
+        <table className="w-full min-w-[620px] text-sm">
+          <thead>
+            <tr className="text-left bg-blue-50 text-[#0070f3]">
+              <th className="px-4 py-3 font-black rounded-l-xl">Category</th>
+              <th className="px-4 py-3 font-black">1 Month</th>
+              <th className="px-4 py-3 font-black">6 Months</th>
+              <th className="px-4 py-3 font-black rounded-r-xl">12 Months</th>
+            </tr>
+          </thead>
+          <tbody>
+            {gymFees.map((row) => (
+              <tr key={row.category} className="border-b border-gray-100 last:border-0">
+                <td className="px-4 py-3 font-bold text-gray-900">{row.category}</td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{row.oneMonth}</td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{row.sixMonths}</td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{row.twelveMonths}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 shadow-sm mb-8 overflow-x-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <Waves className="text-cyan-500" size={22} />
+          <h3 className="text-lg md:text-xl font-black text-gray-900">Swimming Pool Fees (THB / Session)</h3>
         </div>
-      </div>
-    );
-  }
+        <table className="w-full min-w-[620px] text-sm">
+          <thead>
+            <tr className="text-left bg-cyan-50 text-cyan-700">
+              <th className="px-4 py-3 font-black rounded-l-xl">Category</th>
+              <th className="px-4 py-3 font-black">Morning</th>
+              <th className="px-4 py-3 font-black">Afternoon</th>
+              <th className="px-4 py-3 font-black rounded-r-xl">Evening</th>
+            </tr>
+          </thead>
+          <tbody>
+            {poolFees.map((row) => (
+              <tr key={row.category} className="border-b border-gray-100 last:border-0">
+                <td className="px-4 py-3 font-bold text-gray-900">{row.category}</td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{row.morning}</td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{row.afternoon}</td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{row.evening}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
-  const config = facilityConfig[selectedFacility];
-  const Icon = config.icon;
-
-
-  return (
-    <div className="max-w-2xl mx-auto p-4 md:p-6">
-      <button
-        onClick={() => setSelectedFacility(null)}
-        className="mb-6 text-[#0070f3] font-bold flex items-center gap-1 hover:underline"
-      >
-        <ChevronLeft size={20} /> Back to Selection
-      </button>
-
-      <div className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-10 shadow-sm">
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-[#0070f3] shrink-0">
-            <Icon size={28} />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-gray-900">{config.name}</h2>
-            <p className="text-gray-500 font-bold text-sm">
-              Max capacity: {config.maxCapacity} users
-            </p>
-          </div>
+      <section className="bg-white rounded-[2.5rem] border border-gray-100 p-6 md:p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-5">
+          <Info className="text-amber-500" size={22} />
+          <h3 className="text-lg md:text-xl font-black text-gray-900">Notes</h3>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="flex items-center gap-2 text-sm font-black text-gray-700 mb-3">
-              <Calendar size={18} className="text-gray-400" /> Date
-            </label>
-            <input
-              type="date"
-              required
-              value={formData.date}
-              onChange={(e) =>
-                setFormData({ ...formData, date: e.target.value })
-              }
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-black text-gray-700 mb-3">
-              <Clock size={18} className="text-gray-400" /> Time
-            </label>
-            <select
-              required
-              value={formData.time}
-              onChange={(e) =>
-                setFormData({ ...formData, time: e.target.value })
-              }
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none appearance-none"
-            >
-              <option value="">Select time</option>
-
-              {Array.from({ length: 14 }, (_, i) => i + 6).map((hour) => {
-                const time = `${hour.toString().padStart(2, "0")}:00`;
-                const isBooked = bookedSlots.includes(time);
-
-                return (
-                  <option key={time} value={time} disabled={isBooked}>
-                    {time} {isBooked ? " (Booked)" : ""}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-black text-gray-700 mb-3">
-              <Users size={18} className="text-gray-400" /> Participants
-            </label>
-            <input
-              type="number"
-              required
-              min="1"
-              max={config.maxCapacity}
-              value={formData.participants}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  participants: parseInt(e.target.value),
-                })
-              }
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-5 bg-[#0070f3] text-white rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 transition-all active:scale-95"
-          >
-            Confirm Reservation
-          </button>
-        </form>
-      </div>
+        <div className="space-y-2 text-sm font-bold text-gray-600">
+          <p>All prices are per person.</p>
+          <p>Pool fees are charged per session.</p>
+          <p>Longer memberships offer better value per month.</p>
+          <p>*Category 4 = External individuals (registered members).</p>
+        </div>
+      </section>
     </div>
   );
 }
