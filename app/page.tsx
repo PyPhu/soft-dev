@@ -7,18 +7,30 @@ import { MembershipCategory } from "./ui/membership";
 import { ExerciseCategory } from "./ui/exercise"; 
 import { ReservationSummary } from "./ui/reservation_summary"; 
 import { LogOut, FileText } from "lucide-react"; 
+import { useSession, signOut } from "next-auth/react"; // ADDED
 
 export default function Home() {
+  const { data: session } = useSession(); // ADDED: Watch for Google Session
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; id?: string; _id?: string } | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
 
+  // ADDED: Logic to handle Google Login Success automatically
+  useEffect(() => {
+    if (session?.user) {
+      setCurrentUser({
+        name: session.user.name || "",
+        email: session.user.email || "",
+      });
+      setIsLoggedIn(true);
+    }
+  }, [session]);
+
   const fetchUserReservations = async () => {
     if (!currentUser) return;
     try {
-      // UPDATED PATH: removed /auth
       const res = await fetch(`/api/reservation?email=${encodeURIComponent(currentUser.email)}`);
       const contentType = res.headers.get("content-type");
       
@@ -51,6 +63,15 @@ export default function Home() {
     setIsLoggedIn(true);
   };
 
+  // ADDED: Combined logout for both Manual and Google accounts
+  const handleLogout = () => {
+    if (session) {
+      signOut(); // Clear Google Session
+    }
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+  };
+
   const handleCancelReservation = async (id: string) => {
     if (!id) {
       console.error("No ID provided for cancellation");
@@ -60,7 +81,6 @@ export default function Home() {
     if (!confirm("Cancel this booking?")) return;
     
     try {
-        // UPDATED PATH: removed /auth
         const res = await fetch(`/api/reservation?id=${id}`, { 
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' }
@@ -108,7 +128,7 @@ export default function Home() {
            >
              <FileText size={18} /> My Reservations ({reservations.length})
            </button>
-           <button onClick={() => setIsLoggedIn(false)} className="text-red-500 flex items-center gap-1 text-sm font-bold hover:text-red-700 transition-colors">
+           <button onClick={handleLogout} className="text-red-500 flex items-center gap-1 text-sm font-bold hover:text-red-700 transition-colors">
              <LogOut size={18} /> Logout
            </button>
         </div>
@@ -156,7 +176,7 @@ export default function Home() {
           >
             <FileText size={18} /> My Reservations ({reservations.length})
           </button>
-          <button onClick={() => setIsLoggedIn(false)} className="text-red-500 font-bold text-sm flex items-center gap-1 hover:text-red-700">
+          <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1 hover:text-red-700">
             <LogOut size={16}/> Logout
           </button>
         </div>
@@ -171,6 +191,7 @@ export default function Home() {
   );
 }
 
+// Subcomponents stay the same...
 function CategoryCard({ title, desc, icon, bgColor, onClick }: any) {
   return (
     <div onClick={onClick} className="bg-white p-8 rounded-[2rem] shadow-md hover:shadow-xl hover:translate-y-[-4px] transition-all cursor-pointer border border-gray-50 group">
