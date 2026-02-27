@@ -113,7 +113,10 @@ export default function Home() {
       <ProfilePage 
         user={currentUser!} 
         reservationCount={reservations.length} 
-        onBack={() => setShowProfile(false)} 
+        onBack={() => setShowProfile(false)}
+        onUpdateUser={(updatedUser: any) => {
+          setCurrentUser(updatedUser);
+        }}
       />
     );
   }
