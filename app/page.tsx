@@ -8,21 +8,23 @@ import { ExerciseCategory } from "./ui/exercise";
 import { ReservationSummary } from "./ui/reservation_summary"; 
 import { LogOut, FileText, ChevronLeft } from "lucide-react"; 
 import { useSession, signOut } from "next-auth/react"; // ADDED
+import { ProfilePage } from "./ui/profile_page";
 
 export default function Home() {
   const { data: session } = useSession(); // ADDED: Watch for Google Session
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; id?: string; _id?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; id?: string; _id?: string; image?: string; } | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
-
+  const [showProfile, setShowProfile] = useState(false);
   // ADDED: Logic to handle Google Login Success automatically
   useEffect(() => {
     if (session?.user) {
       setCurrentUser({
         name: session.user.name || "",
         email: session.user.email || "",
+        image: session.user.image || "",
       });
       setIsLoggedIn(true);
     }
@@ -106,6 +108,16 @@ export default function Home() {
 
   if (!isLoggedIn) return <Login onLogin={handleLogin} />;
 
+  if (showProfile) {
+    return (
+      <ProfilePage 
+        user={currentUser!} 
+        reservationCount={reservations.length} 
+        onBack={() => setShowProfile(false)} 
+      />
+    );
+  }
+
   if (showSummary) {
     return (
       <ReservationSummary 
@@ -128,6 +140,25 @@ export default function Home() {
            >
              <FileText size={18} /> My Reservations ({reservations.length})
            </button>
+          <button 
+            onClick={() => setShowProfile(true)}
+            className="group flex items-center gap-2 p-1 pr-3 bg-white border border-gray-200 rounded-full hover:border-blue-300 hover:shadow-sm transition-all active:scale-95"
+          >
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+              <img 
+                src={currentUser?.image || "/default_profile.png"} 
+                alt="User Profile" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if the external link fails
+                  (e.target as HTMLImageElement).src = "/default_profile.png";
+                }}
+              />
+            </div>
+            <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors">
+              {currentUser?.name}
+            </span>
+          </button>
            <button onClick={handleLogout} className="text-red-500 flex items-center gap-1 text-sm font-bold hover:text-red-700 transition-colors">
              <LogOut size={18} /> Logout
            </button>
