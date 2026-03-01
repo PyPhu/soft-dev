@@ -119,15 +119,6 @@ export function ProfilePage({ user, reservationCount, onBack, onUpdateUser }: an
   return (
     <main className="min-h-screen bg-[#f1f5f9] py-12 px-6">
       <div className="max-w-2xl mx-auto">
-        
-        {/* Navigation */}
-        <button 
-          onClick={onBack}
-          className="mb-6 flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors font-bold text-sm uppercase tracking-wide"
-        >
-          <ArrowLeft size={18} /> Back to Dashboard
-        </button>
-
         <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
           {/* Header Theme */}
           <div className="h-24 bg-gradient-to-r from-blue-600 to-blue-400" />

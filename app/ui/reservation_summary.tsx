@@ -41,21 +41,6 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
-          >
-            <ChevronLeft size={16} />
-            Back to Categories
-          </button>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            Welcome, <span className="text-gray-900 font-bold">{user.name}</span>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-5xl mx-auto mt-8 px-4">
         <div className="bg-gradient-to-br from-[#0070f3] to-[#00a3ff] rounded-[2.5rem] p-10 mb-10 text-white shadow-2xl shadow-blue-100 relative overflow-hidden">
           <div className="relative z-10">
