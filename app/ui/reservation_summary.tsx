@@ -120,8 +120,8 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
                     key={res._id || res.id} 
                     res={res}
                     title={res.canteen} 
-                    date="Multiple Tables Selected" 
-                    time={`${res.totalSeats} Total Seats`}
+                    date={res.date} 
+                    time={res.timeSlot || res.time}
                     isCancelling={cancellingId === (res._id || res.id)}
                     onCancelClick={() => setCancellingId(res._id || res.id)}
                     onConfirmCancel={() => handleCancel(res._id || res.id)}
