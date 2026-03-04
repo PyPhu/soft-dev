@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   ArrowLeft, 
   Camera, 
@@ -66,15 +66,67 @@ import {
 export function ProfilePage({ user, reservationCount, onBack, onUpdateUser }: any) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
+  // Avatar upload state
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Local state for the form
   const [formData, setFormData] = useState({
     name: user.name || "",
     dob: user.dob || "",
     address: user.address || "",
     phoneNumber: user.phoneNumber || "",
-    gender: user.gender || "male",
+    gender: user.gender || "",
   });
+
+  const handleAvatarClick = () => fileInputRef.current?.click();
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) { alert("Only JPG, PNG, WEBP, or GIF images are allowed."); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("Image must be under 5MB."); return; }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return;
+    setIsUploadingAvatar(true);
+    try {
+      const body = new FormData();
+      body.append("avatar", avatarFile);
+      body.append("email", user.email);
+      const res = await fetch("/api/user/upload-avatar", { method: "POST", body });
+      if (res.ok) {
+        const data = await res.json();
+        onUpdateUser(data.user);
+        setAvatarPreview(null);
+        setAvatarFile(null);
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Avatar upload failed.");
+      }
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      alert("Something went wrong uploading your picture.");
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAvatarCancel = () => {
+    setAvatarPreview(null);
+    setAvatarFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -111,7 +163,7 @@ export function ProfilePage({ user, reservationCount, onBack, onUpdateUser }: an
       dob: user.dob || "",
       address: user.address || "",
       phoneNumber: user.phoneNumber || "",
-      gender: user.gender || "male",
+      gender: user.gender || "",
     });
     setIsEditing(false);
   };
@@ -125,19 +177,47 @@ export function ProfilePage({ user, reservationCount, onBack, onUpdateUser }: an
           
           <div className="px-8 pb-10">
             {/* Avatar Section */}
-            <div className="relative -mt-12 mb-6 flex justify-center">
-              <div className="relative group cursor-pointer">
+            <div className="relative -mt-12 mb-6 flex flex-col items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+              />
+              <div className="relative group cursor-pointer" onClick={handleAvatarClick} title="Change profile picture">
                 <div className="w-32 h-32 rounded-3xl border-4 border-white bg-white overflow-hidden shadow-xl">
                   <img 
-                    src={user.image || "/default_profile.png"} 
+                    src={avatarPreview ?? user.image ?? "/default_profile.png"} 
                     alt="Profile" 
                     className="w-full h-full object-cover" 
                   />
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl">
-                   <Camera className="text-white" size={24} />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl gap-1">
+                  <Camera className="text-white" size={24} />
+                  <span className="text-white text-[10px] font-bold tracking-wide">CHANGE</span>
                 </div>
               </div>
+              {avatarFile && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAvatarUpload}
+                    disabled={isUploadingAvatar}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-xl shadow hover:bg-green-700 transition-all disabled:opacity-70"
+                  >
+                    {isUploadingAvatar ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                    {isUploadingAvatar ? "Uploading…" : "Save Photo"}
+                  </button>
+                  <button
+                    onClick={handleAvatarCancel}
+                    disabled={isUploadingAvatar}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50"
+                  >
+                    <X size={14} />
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Name & Email */}
