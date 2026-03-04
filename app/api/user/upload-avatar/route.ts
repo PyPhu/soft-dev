@@ -49,6 +49,13 @@ export async function POST(req: NextRequest) {
     const filename = `${safeEmail}_${Date.now()}.${ext}`;
     const filePath = path.join(AVATAR_DIR, filename);
 
+    // --- Delete the previous avatar file if it exists ---
+    const existingUser = await User.findOne({ email }).lean() as { image?: string } | null;
+    if (existingUser?.image && existingUser.image.startsWith("/avatars/")) {
+      const oldFilePath = path.join(process.cwd(), "public", existingUser.image);
+      await fs.unlink(oldFilePath).catch(() => {}); // silently ignore if file is already missing
+    }
+
     // --- Write the file to disk ---
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(filePath, buffer);
