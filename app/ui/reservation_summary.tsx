@@ -27,8 +27,8 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
     }
   };
 
-  const exerciseReservations = reservations.filter((r: any) => r.type === "exercise" || r.facility);
-  const sportsReservations = reservations.filter((r: any) => r.sport);
+  
+  const sportsReservations = reservations.filter((r: any) => r.type === "sports");
   const canteenReservations = reservations.filter((r: any) => r.canteen || r.totalSeats);
 
   const StatBox = ({ label, count }: { label: string; count: number }) => (
@@ -41,28 +41,12 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3.5 py-2 text-sm font-black text-[#0070f3] shadow-sm transition-all hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
-          >
-            <ChevronLeft size={16} />
-            Back to Categories
-          </button>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            Welcome, <span className="text-gray-900 font-bold">{user.name}</span>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-5xl mx-auto mt-8 px-4">
         <div className="bg-gradient-to-br from-[#0070f3] to-[#00a3ff] rounded-[2.5rem] p-10 mb-10 text-white shadow-2xl shadow-blue-100 relative overflow-hidden">
           <div className="relative z-10">
             <h1 className="text-4xl font-black mb-6 tracking-tight">My Reservations</h1>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatBox label="Total" count={reservations.length} />
-              <StatBox label="Exercise" count={exerciseReservations.length} />
               <StatBox label="Sports" count={sportsReservations.length} />
               <StatBox label="Canteen" count={canteenReservations.length} />
             </div>
@@ -136,8 +120,8 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
                     key={res._id || res.id} 
                     res={res}
                     title={res.canteen} 
-                    date="Multiple Tables Selected" 
-                    time={`${res.totalSeats} Total Seats`}
+                    date={res.date} 
+                    time={res.timeSlot || res.time}
                     isCancelling={cancellingId === (res._id || res.id)}
                     onCancelClick={() => setCancellingId(res._id || res.id)}
                     onConfirmCancel={() => handleCancel(res._id || res.id)}
@@ -158,25 +142,6 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
               </ReservationSection>
             )}
 
-            {/* Exercise Section */}
-            {exerciseReservations.length > 0 && (
-              <ReservationSection title="Exercise Facilities" icon={<Dumbbell />}>
-                {exerciseReservations.map((res: any) => (
-                  <ReservationCard 
-                    key={res._id || res.id} 
-                    res={res}
-                    title={res.facility} 
-                    date={res.date} 
-                    time={res.time}
-                    isCancelling={cancellingId === (res._id || res.id)}
-                    onCancelClick={() => setCancellingId(res._id || res.id)}
-                    onConfirmCancel={() => handleCancel(res._id || res.id)}
-                    onAbortCancel={() => setCancellingId(null)}
-                    onRespond={handleResponse}
-                  />
-                ))}
-              </ReservationSection>
-            )}
           </div>
         )}
       </main>
