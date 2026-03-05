@@ -6,14 +6,9 @@ import { SportsCategory } from "./ui/sport";
 import { MembershipCategory } from "./ui/coworkspace";
 import { ExerciseCategory } from "./ui/exercise"; 
 import { ReservationSummary } from "./ui/reservation_summary"; 
-<<<<<<< HEAD
-import { LogOut, FileText } from "lucide-react"; 
-import { useSession, signOut } from "next-auth/react"; // ADDED
-=======
 import { LogOut, FileText, ChevronLeft } from "lucide-react"; 
 import { useSession, signOut } from "next-auth/react"; 
 import { ProfilePage } from "./ui/profile_page";
->>>>>>> tata
 
 
 export default function Home() {
@@ -77,24 +72,6 @@ export default function Home() {
 
   // --- 2. THE UNIFIED RENDER ---
   return (
-<<<<<<< HEAD
-    <main className="min-h-screen bg-gray-50">
-      <nav className="p-4 bg-white border-b flex justify-between items-center px-8 shadow-sm">
-        <button onClick={() => setActiveCategory(null)} className="text-[#0070f3] font-bold flex items-center gap-2 hover:translate-x-[-4px] transition-transform">
-          ← Back to Categories
-        </button>
-        <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 -translate-x-1/2">Facility Reservation</h1>
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={() => setShowSummary(true)}
-            className="bg-[#0070f3] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold shadow-md"
-          >
-            <FileText size={18} /> My Reservations ({reservations.length})
-          </button>
-          <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1 hover:text-red-700">
-            <LogOut size={16}/> Logout
-          </button>
-=======
     <div className="min-h-screen bg-[#f1f5f9]">
       {/* GLOBAL NAVBAR */}
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
@@ -171,7 +148,6 @@ export default function Home() {
               <LogOut size={20} />
             </button>
           </div>
->>>>>>> tata
         </div>
       </nav>
 
