@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Reservation from "@/models/Reservation";
+import User from "@/models/User";
+import {
+  applyMonthlyResetIfNeeded,
+  formatBanEndDate,
+  getBanValidation,
+} from "@/lib/reservation-penalty";
 
 type HubId = "HM" | "KLLC";
 
@@ -24,6 +30,7 @@ const spaceConfigs: SpaceConfig[] = [
 
 type CreateCoworkingPayload = {
   hostName?: string;
+  hostEmail?: string;
   userName?: string;
   hub?: string;
   spaceId?: string;
@@ -43,14 +50,31 @@ export async function createCoworkingReservation(req: Request) {
     const body = parsePayload(await req.json());
 
     const hostName = (body.hostName || "").trim();
+    const hostEmail = (body.hostEmail || "").trim().toLowerCase();
     const hub = (body.hub || "").trim().toUpperCase();
     const spaceId = (body.spaceId || "").trim();
     const unitNumber = Number(body.unitNumber);
     const date = (body.date || "").trim();
     const time = (body.time || "").trim();
 
-    if (!hostName || !hub || !spaceId || !Number.isInteger(unitNumber) || !date || !time) {
+    if (!hostName || !hostEmail || !hub || !spaceId || !Number.isInteger(unitNumber) || !date || !time) {
       return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
+    }
+
+    const user = await User.findOne({ email: hostEmail });
+    if (!user) {
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
+    }
+
+    applyMonthlyResetIfNeeded(user);
+    const { isBanned, banUntil } = getBanValidation(user);
+    await user.save();
+
+    if (isBanned && banUntil) {
+      return NextResponse.json(
+        { message: `You cannot make a reservation until ${formatBanEndDate(banUntil)}.` },
+        { status: 403 },
+      );
     }
 
     const config = spaceConfigs.find((space) => space.id === spaceId && space.hub === hub);
@@ -80,6 +104,7 @@ export async function createCoworkingReservation(req: Request) {
       type: "coworking",
       sport: "Co-Working",
       hostName,
+      hostEmail,
       userName: body.userName || hostName,
       date,
       timeSlot: time,

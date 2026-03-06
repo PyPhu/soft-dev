@@ -4,6 +4,7 @@ const ReservationSchema = new Schema(
   {
     sport: { type: String, required: true },
     hostName: { type: String, required: true },
+    hostEmail: { type: String, default: "" },
     date: { type: String, required: true },
     timeSlot: { type: String, required: true },
     participants: { type: [String], default: [] },

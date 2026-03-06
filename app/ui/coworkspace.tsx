@@ -137,6 +137,7 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
     const reservationData = {
       type: "coworking",
       hostName: user.name,
+      hostEmail: user.email,
       userName: user.name,
       hub: hubs[selectedHub].name,
       spaceId: selectedSpace.id,
@@ -175,7 +176,7 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
       });
     } catch (error) {
       console.error(error);
-      alert("Could not save reservation. Please try again.");
+      alert(error instanceof Error ? error.message : "Could not save reservation. Please try again.");
     }
   };
 

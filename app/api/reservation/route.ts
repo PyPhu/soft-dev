@@ -3,6 +3,12 @@ import connectDB from "@/lib/mongodb";
 import Reservation from "@/models/Reservation";
 import Invitation from "@/models/Invitation";
 import User from "@/models/User";
+import {
+  applyCancellationPenalty,
+  applyMonthlyResetIfNeeded,
+  formatBanEndDate,
+  getBanValidation,
+} from "@/lib/reservation-penalty";
 
 export async function GET(req: Request) {
   try {
@@ -29,17 +35,36 @@ export async function GET(req: Request) {
 
     //CASE 2: Fetch user's reservations
     if (!email) {
-      return NextResponse.json({ owned: [], received: [] }, { status: 400 });
+      return NextResponse.json(
+        { owned: [], received: [], isBanned: false, ban_until: null },
+        { status: 400 },
+      );
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return NextResponse.json({ owned: [], received: [] });
+      return NextResponse.json({
+        owned: [],
+        received: [],
+        isBanned: false,
+        ban_until: null,
+      });
     }
 
+    applyMonthlyResetIfNeeded(user);
+    const { isBanned, banUntil } = getBanValidation(user);
+    await user.save();
+
     const ownedReservations = await Reservation.find({
-      hostName: user.name,
-      status: { $ne: "cancelled" },
+      $and: [
+        { status: { $ne: "cancelled" } },
+        {
+          $or: [
+            { hostEmail: user.email },
+            { hostName: user.name },
+          ],
+        },
+      ],
     }).lean();
 
     const ownedWithInvites = await Promise.all(
@@ -82,10 +107,19 @@ export async function GET(req: Request) {
     return NextResponse.json({
       owned: ownedWithInvites,
       received: invitations,
+      isBanned,
+      ban_until: banUntil,
+      cancellation_count: user.cancellation_count || 0,
     });
   } catch (error: any) {
     return NextResponse.json(
-      { owned: [], received: [], error: error.message },
+      {
+        owned: [],
+        received: [],
+        isBanned: false,
+        ban_until: null,
+        error: error.message,
+      },
       { status: 500 },
     );
   }
@@ -95,7 +129,34 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { sport, date, timeSlot } = body;
+    const { sport, date, timeSlot, hostEmail } = body;
+
+    if (!hostEmail) {
+      return NextResponse.json(
+        { message: "Host email is required." },
+        { status: 400 },
+      );
+    }
+
+    const user = await User.findOne({ email: hostEmail });
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found." },
+        { status: 404 },
+      );
+    }
+
+    applyMonthlyResetIfNeeded(user);
+    const { isBanned, banUntil } = getBanValidation(user);
+    await user.save();
+
+    if (isBanned && banUntil) {
+      return NextResponse.json(
+        { message: `You cannot make a reservation until ${formatBanEndDate(banUntil)}.` },
+        { status: 403 },
+      );
+    }
+
     const existing = await Reservation.findOne({
       sport,
       date,
@@ -127,9 +188,19 @@ export async function DELETE(req: Request) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const email = searchParams.get("email");
 
     if (!id)
       return NextResponse.json({ message: "ID required" }, { status: 400 });
+
+    const reservation = await Reservation.findById(id);
+    if (!reservation) {
+      return NextResponse.json({ message: "Reservation not found" }, { status: 404 });
+    }
+
+    if (reservation.status === "cancelled") {
+      return NextResponse.json({ message: "Reservation already cancelled" }, { status: 200 });
+    }
 
     await Reservation.findByIdAndUpdate(id, {
       status: "cancelled",
@@ -137,7 +208,32 @@ export async function DELETE(req: Request) {
     });
     await Invitation.deleteMany({ reservation: id });
 
-    return NextResponse.json({ message: "Canceled" }, { status: 200 });
+    const user = await User.findOne(
+      email
+        ? { email }
+        : reservation.hostEmail
+          ? { email: reservation.hostEmail }
+          : { name: reservation.hostName },
+    );
+
+    if (!user) {
+      return NextResponse.json(
+        { message: "Canceled, but penalty could not be applied because user was not found." },
+        { status: 200 },
+      );
+    }
+
+    const { cancellationCount, banUntil } = applyCancellationPenalty(user);
+    await user.save();
+
+    return NextResponse.json(
+      {
+        message: "Canceled",
+        cancellation_count: cancellationCount,
+        ban_until: banUntil,
+      },
+      { status: 200 },
+    );
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }

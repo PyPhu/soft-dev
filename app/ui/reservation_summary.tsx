@@ -28,8 +28,8 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
   };
 
   
-  const sportsReservations = reservations.filter((r: any) => r.type === "sports");
-  const canteenReservations = reservations.filter((r: any) => r.canteen || r.totalSeats);
+  const sportsReservations = reservations.filter((r: any) => r.sport && r.type !== "coworking");
+  const canteenReservations = reservations.filter((r: any) => r.type === "coworking" || r.canteen || r.totalSeats);
 
   const StatBox = ({ label, count }: { label: string; count: number }) => (
     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
@@ -168,6 +168,22 @@ function ReservationCard({ res, title, date, time, extra, isCancelling, onCancel
     const ONE_HOUR = 60 * 60 * 1000;
     const [timeLeft, setTimeLeft] = useState("");
     const autoDeclinedRef = useRef(false);
+    const participantCount = Array.isArray(res.participants) ? res.participants.length : res.participants;
+    const reservationType = res.type === "coworking" ? "Co-Working" : (res.sport ? "Sports" : "General");
+    const details = [
+      { label: "Type", value: reservationType },
+      { label: "Role", value: isHost ? "Host" : "Invitee" },
+      { label: "Status", value: res.status || "active" },
+      { label: "Date", value: date || "-" },
+      { label: "Time", value: time || "-" },
+      { label: "Host", value: res.hostName || "-" },
+      ...(res.hub ? [{ label: "Hub", value: res.hub }] : []),
+      ...(res.facility ? [{ label: "Facility", value: res.facility }] : []),
+      ...(res.unit ? [{ label: "Unit", value: res.unit }] : []),
+      ...(participantCount ? [{ label: "Participants", value: String(participantCount) }] : []),
+      ...(res.minParticipants ? [{ label: "Min Required", value: String(res.minParticipants) }] : []),
+      ...(res.court ? [{ label: "Court", value: String(res.court) }] : []),
+    ];
 
     const isExpiredCancelled =
     res.status === "cancelled" &&
@@ -201,12 +217,12 @@ function ReservationCard({ res, title, date, time, extra, isCancelling, onCancel
     }, [res.expiresAt, isHost, res.invitationId, onRespond]);
 
     return (
-        <div className={`bg-white rounded-[2.5rem] p-8 border transition-all ${isCancelling ? 'border-red-200 ring-4 ring-red-50' : 'border-gray-100 shadow-sm'} ${res.status === 'cancelled' ? 'opacity-40 grayscale pointer-events-none'
+        <div className={`bg-white rounded-[2rem] p-6 border transition-all ${isCancelling ? 'border-red-200 ring-2 ring-red-50' : 'border-gray-100 shadow-sm'} ${res.status === 'cancelled' ? 'opacity-40 grayscale pointer-events-none'
   : ''}`}>
-            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                <div className="flex-1 space-y-3">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                <div className="flex-1 space-y-2.5">
                     <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-black text-gray-900">{title}</h3>
+                        <h3 className="text-xl font-black text-gray-900">{title}</h3>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${isHost ? 'bg-green-50 text-green-600 border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                             {isHost ? (res.status === 'cancelled' ? 'Cancelled' : 'Your Reservation') : `Invite from ${res.senderName}`}
                         </span>
@@ -216,9 +232,20 @@ function ReservationCard({ res, title, date, time, extra, isCancelling, onCancel
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-wrap gap-6 text-sm font-bold text-gray-500">
-                        <div className="flex items-center gap-2"><Calendar size={18} className="text-[#0070f3]" /> {date}</div>
-                        <div className="flex items-center gap-2"><Clock size={18} className="text-[#0070f3]" /> {time}</div>
+                    <div className="flex flex-wrap gap-4 text-xs font-bold text-gray-500">
+                        <div className="flex items-center gap-1.5"><Calendar size={16} className="text-[#0070f3]" /> {date}</div>
+                        <div className="flex items-center gap-1.5"><Clock size={16} className="text-[#0070f3]" /> {time}</div>
+                    </div>
+                    <div className="bg-gray-50/70 border border-gray-100 rounded-xl p-3 mt-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-2">Details</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {details.map((item, idx) => (
+                              <div key={`${item.label}-${idx}`} className="bg-white rounded-lg border border-gray-100 px-2.5 py-1.5">
+                                  <p className="text-[9px] uppercase tracking-wide text-gray-400 font-black leading-tight">{item.label}</p>
+                                  <p className="text-[11px] font-bold text-gray-700 break-words leading-tight mt-0.5">{item.value}</p>
+                              </div>
+                            ))}
+                        </div>
                     </div>
                     {extra}
                 </div>

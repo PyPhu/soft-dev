@@ -22,7 +22,19 @@ const UserSchema = new mongoose.Schema(
       type: String,
       enum: ["male", "female", "other", "prefer-not-to-say"],
       default: "prefer-not-to-say"
-    }
+    },
+    cancellation_count: {
+      type: Number,
+      default: 0,
+    },
+    last_cancellation_date: {
+      type: Date,
+      default: null,
+    },
+    ban_until: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

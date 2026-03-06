@@ -46,6 +46,7 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
       date: formData.date,
       timeSlot: formData.time,
       hostName: user.name,
+      hostEmail: user.email,
       minParticipants: config.minParticipants,
     };
 
@@ -57,7 +58,10 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
         body: JSON.stringify(reservationData),
       });
 
-      if (!res.ok) throw new Error("Failed to save reservation");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to save reservation");
+      }
       const savedRes = await res.json();
 
       // 2. Send Invitations to each email added
@@ -80,7 +84,7 @@ export function SportsCategory({ user, onAddReservation, onBack }: any) {
       alert("Reservation confirmed and invites sent!");
     } catch (err) {
       console.error(err);
-      alert("Error saving reservation to database.");
+      alert(err instanceof Error ? err.message : "Error saving reservation to database.");
     }
   };
 

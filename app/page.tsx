@@ -19,6 +19,9 @@ export default function Home() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [banUntil, setBanUntil] = useState<string | null>(null);
+  const [banCountdown, setBanCountdown] = useState("");
+  const [isInPenalty, setIsInPenalty] = useState(false);
 
   // --- Logic & Effects (Kept exactly as you had them) ---
   useEffect(() => {
@@ -42,6 +45,7 @@ export default function Home() {
         ...(data.received || []).map((r: any) => ({ ...r, role: 'invitee' }))
       ];
       setReservations(combined);
+      setBanUntil(data.ban_until || null);
     } catch (err) { console.error("Sync failed:", err); }
   };
 
@@ -57,14 +61,73 @@ export default function Home() {
     if (session) signOut();
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setBanUntil(null);
+    setBanCountdown("");
   };
 
   const handleCancelReservation = async (id: string) => {
     if (!confirm("Cancel this booking?")) return;
     try {
-      const res = await fetch(`/api/reservation?id=${id}`, { method: 'DELETE' });
-      if (res.ok) fetchUserReservations();
+      const res = await fetch(`/api/reservation?id=${id}&email=${encodeURIComponent(currentUser?.email || "")}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || "Failed to cancel reservation");
+        return;
+      }
+      if (data?.ban_until) {
+        alert(`Reservation cancelled. You cannot make a reservation until ${new Date(data.ban_until).toLocaleString()}.`);
+        setBanUntil(data.ban_until);
+      }
+      fetchUserReservations();
     } catch (e) { console.error(e); }
+  };
+
+  useEffect(() => {
+    if (!banUntil) {
+      setBanCountdown("");
+      setIsInPenalty(false);
+      return;
+    }
+
+    const tick = () => {
+      const now = Date.now();
+      const end = new Date(banUntil).getTime();
+      const diff = end - now;
+      if (diff <= 0) {
+        setBanCountdown("");
+        setBanUntil(null);
+        setIsInPenalty(false);
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      setIsInPenalty(true);
+      setBanCountdown(`${days}d ${hours}h ${mins}m ${secs}s`);
+    };
+
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [banUntil]);
+
+  const handleBookCategory = (category: 'exercise' | 'sports' | 'membership') => {
+    if (isInPenalty) {
+      const dateText = new Date(banUntil!).toLocaleString();
+      alert(`User is in penalty. You cannot make a reservation until ${dateText}.`);
+      return;
+    }
+    setActiveCategory(category);
+  };
+
+  const handleBookNowFromSummary = () => {
+    if (isInPenalty) {
+      const dateText = new Date(banUntil!).toLocaleString();
+      alert(`User is in penalty. You cannot make a reservation until ${dateText}.`);
+      return;
+    }
+    setShowSummary(false);
   };
 
   // --- 1. LOGIN GUARD (This is the only early return allowed) ---
@@ -101,6 +164,11 @@ export default function Home() {
 
           {/* RIGHT SECTION: Navigation Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {isInPenalty && banCountdown && (
+              <div className="px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 text-[11px] font-black">
+                Penalty: {banCountdown}
+              </div>
+            )}
             
             {/* My Reservations Button */}
             <button 
@@ -158,7 +226,7 @@ export default function Home() {
             <ProfilePage user={currentUser!} reservationCount={reservations.length} onBack={() => setShowProfile(false)} onUpdateUser={setCurrentUser} />
           </div>
         ) : showSummary ? (
-          <ReservationSummary user={currentUser!} reservations={reservations} onBack={() => setShowSummary(false)} onCancelReservation={handleCancelReservation} refreshData={fetchUserReservations} />
+          <ReservationSummary user={currentUser!} reservations={reservations} onBack={handleBookNowFromSummary} onCancelReservation={handleCancelReservation} refreshData={fetchUserReservations} />
         ) : activeCategory ? (
           <div className="max-w-6xl mx-auto p-6">
             {activeCategory === 'sports' && <SportsCategory user={currentUser!} onAddReservation={fetchUserReservations} onBack={() => setActiveCategory(null)} />}
@@ -177,9 +245,9 @@ export default function Home() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <CategoryCard title="Exercise" desc="Fitness Center & Swimming Pool" icon="🏋️‍♂️" bgColor="bg-[#0070f3]" onClick={() => setActiveCategory('exercise')} />
-              <CategoryCard title="Sports" desc="Football, Volleyball, Badminton" icon="🏆" bgColor="bg-[#22c55e]" onClick={() => setActiveCategory('sports')} />
-              <CategoryCard title="Co-Working Space" desc="Canteen Table Booking" icon="👥" bgColor="bg-[#f97316]" onClick={() => setActiveCategory('membership')} />
+              <CategoryCard title="Exercise" desc="Fitness Center & Swimming Pool" icon="🏋️‍♂️" bgColor="bg-[#0070f3]" onClick={() => handleBookCategory('exercise')} />
+              <CategoryCard title="Sports" desc="Football, Volleyball, Badminton" icon="🏆" bgColor="bg-[#22c55e]" onClick={() => handleBookCategory('sports')} />
+              <CategoryCard title="Co-Working Space" desc="Canteen Table Booking" icon="👥" bgColor="bg-[#f97316]" onClick={() => handleBookCategory('membership')} />
             </div>
 
             <div className="bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-100">
