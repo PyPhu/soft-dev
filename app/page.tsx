@@ -135,9 +135,9 @@ export default function Home() {
 
   // --- 2. THE UNIFIED RENDER ---
   return (
-    <div className="min-h-screen bg-[#f1f5f9]">
+    <div className="aurora-bg min-h-screen">
       {/* GLOBAL NAVBAR */}
-      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+      <nav className="glass-panel sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           
           {/* LEFT SECTION: Back Button & Logo */}
@@ -236,7 +236,7 @@ export default function Home() {
         ) : (
           /* DASHBOARD VIEW (Only shows if none of the above are active) */
           <div className="max-w-6xl mx-auto py-12 px-6">
-            <header className="mb-12 bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 text-center">
+            <header className="glass-panel mb-12 rounded-[2.5rem] p-10 text-center">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">KMITL Facility Reservation System</h1>
               <p className="text-gray-500 font-medium">King Mongkut's Institute of Technology Ladkrabang</p>
               <div className="mt-4 inline-block bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 text-xs text-gray-400">
@@ -250,7 +250,7 @@ export default function Home() {
               <CategoryCard title="Co-Working Space" desc="Canteen Table Booking" icon="👥" bgColor="bg-[#f97316]" onClick={() => handleBookCategory('membership')} />
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-100">
+            <div className="glass-panel rounded-[2.5rem] p-12">
                <h2 className="text-center text-lg font-bold text-gray-900 mb-12 uppercase tracking-wide">How It Works</h2>
                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                  <Step num="1" color="bg-blue-50 text-blue-500" title="Select Category" desc="Choose a category" />
@@ -271,7 +271,7 @@ export default function Home() {
 // Subcomponents stay the same...
 function CategoryCard({ title, desc, icon, bgColor, onClick }: any) {
   return (
-    <div onClick={onClick} className="bg-white p-8 rounded-[2rem] shadow-md hover:shadow-xl hover:translate-y-[-4px] transition-all cursor-pointer border border-gray-50 group">
+    <div onClick={onClick} className="glass-panel p-8 rounded-[2rem] hover:shadow-xl hover:translate-y-[-4px] transition-all cursor-pointer border border-gray-50 group">
       <div className={`${bgColor} w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
         {icon}
       </div>

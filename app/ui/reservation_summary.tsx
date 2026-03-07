@@ -40,9 +40,9 @@ export function ReservationSummary({ user, reservations, onBack, onCancelReserva
 
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="aurora-bg min-h-screen pb-20">
       <main className="max-w-5xl mx-auto mt-8 px-4">
-        <div className="bg-gradient-to-br from-[#0070f3] to-[#00a3ff] rounded-[2.5rem] p-10 mb-10 text-white shadow-2xl shadow-blue-100 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#1b120a] to-[#2a1708] rounded-[2.5rem] p-10 mb-10 text-white shadow-2xl shadow-black/50 border border-orange-500/30 relative overflow-hidden">
           <div className="relative z-10">
             <h1 className="text-4xl font-black mb-6 tracking-tight">My Reservations</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

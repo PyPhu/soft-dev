@@ -169,9 +169,9 @@ export function ProfilePage({ user, reservationCount, onBack, onUpdateUser }: an
   };
 
   return (
-    <main className="min-h-screen bg-[#f1f5f9] py-12 px-6">
+    <main className="aurora-bg min-h-screen py-12 px-6">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+        <div className="glass-panel rounded-[2.5rem] overflow-hidden">
           {/* Header Theme */}
           <div className="h-24 bg-gradient-to-r from-blue-600 to-blue-400" />
           

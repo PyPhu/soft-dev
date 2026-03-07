@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #f6f2ec;
+  --surface-1: #0f0f0f;
+  --surface-2: #171717;
+  --surface-3: #1f1f1f;
+  --border: #2b2b2b;
+  --muted: #c8b194;
+  --accent: #ff8a1f;
+  --accent-strong: #ff9f3f;
+  --danger: #ff5e57;
 }
 
 @theme inline {
@@ -12,15 +20,142 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at 16% 8%, rgba(255, 138, 31, 0.18), transparent 33%),
+    radial-gradient(circle at 85% 5%, rgba(255, 120, 20, 0.12), transparent 28%),
+    linear-gradient(180deg, #000000 0%, #050505 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+.aurora-bg {
+  background:
+    radial-gradient(circle at 18% 10%, rgba(255, 138, 31, 0.18), transparent 34%),
+    radial-gradient(circle at 86% 8%, rgba(255, 120, 20, 0.12), transparent 30%),
+    #000000;
+}
+
+.glass-panel {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+/* Dark surfaces */
+.bg-white,
+.bg-white\/80,
+.bg-white\/10,
+.bg-gray-50,
+.bg-gray-50\/70,
+.bg-gray-100,
+.bg-gray-200 {
+  background-color: var(--surface-1) !important;
+}
+
+/* Elevated surface */
+.bg-blue-50,
+.bg-blue-50\/50,
+.bg-blue-100,
+.bg-blue-200\/50,
+.bg-green-50,
+.bg-purple-50,
+.bg-cyan-50,
+.bg-orange-50,
+.bg-red-50 {
+  background-color: var(--surface-2) !important;
+}
+
+/* Accent backgrounds */
+.bg-blue-600,
+.bg-blue-700,
+.bg-green-600,
+.bg-green-700,
+.bg-\[\#0070f3\],
+.bg-orange-500,
+.bg-\[\#FF9900\] {
+  background-color: var(--accent) !important;
+}
+
+/* Accent foreground */
+.text-blue-500,
+.text-blue-600,
+.text-blue-700,
+.text-\[\#0070f3\],
+.text-green-500,
+.text-green-600,
+.text-orange-500,
+.text-orange-600,
+.text-cyan-500,
+.text-cyan-700 {
+  color: var(--accent) !important;
+}
+
+.text-blue-50,
+.text-blue-100,
+.text-blue-400,
+.text-gray-400,
+.text-gray-500,
+.text-gray-600,
+.text-gray-700 {
+  color: var(--muted) !important;
+}
+
+.text-gray-800,
+.text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+/* Border remap */
+.border-gray-50,
+.border-gray-100,
+.border-gray-200,
+.border-gray-300,
+.border-blue-100,
+.border-blue-200,
+.border-blue-300,
+.border-blue-500,
+.border-green-100,
+.border-red-200 {
+  border-color: var(--border) !important;
+}
+
+/* Focus rings */
+.focus\:border-blue-500:focus,
+.focus\:ring-blue-100:focus,
+.focus-visible\:ring-blue-200:focus-visible,
+.focus-visible\:ring-blue-100:focus-visible {
+  border-color: var(--accent) !important;
+  --tw-ring-color: color-mix(in srgb, var(--accent) 35%, transparent) !important;
+}
+
+/* Gradient remap */
+.from-blue-600,
+.from-\[\#0070f3\] {
+  --tw-gradient-from: #cf690d var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(207 105 13 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.to-blue-400,
+.to-\[\#00a3ff\] {
+  --tw-gradient-to: #ff9f3f var(--tw-gradient-to-position) !important;
+}
+
+/* Strong buttons */
+button[class*="bg-blue"],
+button[class*="bg-\[#0070f3\]"],
+button[class*="bg-orange-500"] {
+  box-shadow: 0 12px 32px rgba(255, 138, 31, 0.22);
+}
+
+input,
+select,
+textarea {
+  color: var(--foreground);
 }

@@ -1,11 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { 
   GraduationCap, Mail, Lock, User, Chrome, 
   ShieldCheck, CheckCircle2, XCircle, Eye, EyeOff, ArrowLeft 
 } from "lucide-react";
-import { signIn } from "next-auth/react";
+
+interface GoogleCredentialResponse {
+  credential?: string;
+}
+
+interface GoogleIdConfiguration {
+  client_id: string;
+  callback: (response: GoogleCredentialResponse) => void;
+  ux_mode?: "popup" | "redirect";
+  auto_select?: boolean;
+  cancel_on_tap_outside?: boolean;
+}
+
+interface GoogleAccountsId {
+  initialize: (config: GoogleIdConfiguration) => void;
+  prompt: (listener?: (notification: GooglePromptMomentNotification) => void) => void;
+}
+
+interface GooglePromptMomentNotification {
+  isNotDisplayed: () => boolean;
+  isSkippedMoment: () => boolean;
+  isDismissedMoment: () => boolean;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: GoogleAccountsId;
+      };
+    };
+  }
+}
 
 interface LoginProps {
   onLogin: (user: { name: string; email: string }) => void;
@@ -22,6 +54,91 @@ export function Login({ onLogin }: LoginProps) {
     confirmPassword: "",
     studentId: "",
   });
+  const [isGoogleBusy, setIsGoogleBusy] = useState(false);
+  const isGoogleBusyRef = useRef(false);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const setGoogleBusy = (value: boolean) => {
+    isGoogleBusyRef.current = value;
+    setIsGoogleBusy(value);
+  };
+
+  useEffect(() => {
+    if (!googleClientId) return;
+    if (window.google?.accounts?.id) return;
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [googleClientId]);
+
+  const handleGoogleLogin = async () => {
+    if (isGoogleBusyRef.current) return;
+
+    if (!googleClientId) {
+      alert("Google Client ID is not configured.");
+      return;
+    }
+
+    if (!window.google?.accounts?.id) {
+      alert("Google Sign-In is still loading. Please try again.");
+      return;
+    }
+
+    setGoogleBusy(true);
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      ux_mode: "popup",
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      callback: async (response: GoogleCredentialResponse) => {
+        try {
+          if (!response.credential) {
+            alert("Google login failed. No credential received.");
+            return;
+          }
+
+          const apiRes = await fetch("/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential: response.credential }),
+          });
+
+          const data = await apiRes.json();
+          if (!apiRes.ok) {
+            alert(data.message || "Google login failed");
+            setGoogleBusy(false);
+            return;
+          }
+
+          localStorage.setItem("authToken", data.token);
+          onLogin(data.user);
+        } catch (error) {
+          console.error(error);
+          alert("Google login failed");
+        } finally {
+          setGoogleBusy(false);
+        }
+      },
+    });
+
+    window.google.accounts.id.prompt((notification) => {
+      if (
+        notification.isNotDisplayed() ||
+        notification.isSkippedMoment() ||
+        notification.isDismissedMoment()
+      ) {
+        setGoogleBusy(false);
+      }
+    });
+  };
 
   const getStrength = (pw: string) => {
     if (!pw) return { label: "", color: "bg-gray-200", width: "0%" };
@@ -72,7 +189,7 @@ export function Login({ onLogin }: LoginProps) {
       const data = await response.json();
       alert(data.message);
       if (response.ok) setIsForgotPassword(false);
-    } catch (error) {
+    } catch {
       alert("Error sending request");
     }
   };
@@ -80,8 +197,8 @@ export function Login({ onLogin }: LoginProps) {
   // NEW VIEW: Forgot Password Form
   if (isForgotPassword) {
     return (
-      <div className="min-h-screen w-full bg-[#FF9900] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+      <div className="aurora-bg min-h-screen w-full flex items-center justify-center p-4">
+        <div className="glass-panel w-full max-w-md rounded-2xl p-8">
           <button 
             onClick={() => setIsForgotPassword(false)}
             className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-blue-600 mb-6 transition-colors"
@@ -90,7 +207,7 @@ export function Login({ onLogin }: LoginProps) {
           </button>
           
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
-          <p className="text-gray-500 text-sm mb-6">Enter your email and we'll generate a reset link in the terminal.</p>
+          <p className="text-gray-500 text-sm mb-6">Enter your email and we&apos;ll generate a reset link in the terminal.</p>
           
           <form onSubmit={handleForgotSubmit} className="space-y-4">
             <div>
@@ -117,7 +234,7 @@ export function Login({ onLogin }: LoginProps) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#FF9900] flex items-center justify-center p-4">
+    <div className="aurora-bg min-h-screen w-full flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-4 shadow-lg">
@@ -127,7 +244,7 @@ export function Login({ onLogin }: LoginProps) {
           <p className="text-blue-50/90 font-medium text-lg">Facility Reservation System</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="glass-panel rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </h2>
@@ -247,7 +364,7 @@ export function Login({ onLogin }: LoginProps) {
                 <div className="flex-grow border-t border-gray-200"></div>
             </div>
 
-            <button type="button" onClick={() => signIn("google")} className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+            <button type="button" onClick={handleGoogleLogin} disabled={isGoogleBusy} className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
               <Chrome className="w-5 h-5 text-red-500" /> 
               {isSignUp ? "Sign up with Google" : "Sign in with Google"}
             </button>
