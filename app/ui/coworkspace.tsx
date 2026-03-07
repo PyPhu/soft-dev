@@ -19,6 +19,7 @@ type HubId = "hm" | "kllc";
 interface User {
   name: string;
   email: string;
+  role: "student" | "user";
   id?: string;
   _id?: string;
 }
@@ -109,6 +110,10 @@ function SpaceIcon({ type }: { type: CoworkingSpace["icon"] }) {
   return <DoorOpen size={24} />;
 }
 
+function isPrivateRoom(space: CoworkingSpace | null) {
+  return space?.name === "Private Room";
+}
+
 export function MembershipCategory({ user, onAddReservation }: MembershipCategoryProps) {
   const [selectedHub, setSelectedHub] = useState<HubId | null>(null);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
@@ -131,6 +136,11 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
   const handleConfirmBooking = async () => {
     if (!selectedHub || !selectedSpace || !selectedUnit || !formData.time) {
       alert("Please choose space, unit, date and time before confirming.");
+      return;
+    }
+
+    if (isPrivateRoom(selectedSpace) && user.role !== "student") {
+      alert("Private rooms are only available for student users.");
       return;
     }
 
@@ -282,14 +292,20 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
 
             <button
               onClick={handleConfirmBooking}
+              disabled={isPrivateRoom(selectedSpace) && user.role !== "student"}
               className={`px-8 py-3 rounded-2xl font-black shadow-lg transition-all flex items-center gap-2 active:scale-95 ${
-                selectedSpace && selectedUnit && formData.time
+                selectedSpace && selectedUnit && formData.time && !(isPrivateRoom(selectedSpace) && user.role !== "student")
                   ? "bg-[#0070f3] text-white shadow-blue-100 hover:bg-blue-700"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
             >
               <CheckCircle2 size={18} /> Confirm Booking
             </button>
+            {isPrivateRoom(selectedSpace) && user.role !== "student" && (
+              <p className="text-xs font-bold text-gray-500">
+                Private rooms are only available for student users.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -297,16 +313,20 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
       <div className="grid lg:grid-cols-2 gap-8 mb-10">
         {spacesInHub.map((space) => {
           const isSelected = selectedSpaceId === space.id;
+          const isRestricted = isPrivateRoom(space) && user.role !== "student";
 
           return (
             <button
               key={space.id}
+              disabled={isRestricted}
               onClick={() => {
                 setSelectedSpaceId(space.id);
                 setSelectedUnit(null);
               }}
               className={`rounded-[2rem] p-7 border text-left transition-all ${
-                isSelected
+                isRestricted
+                  ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-70"
+                  : isSelected
                   ? "bg-blue-50 border-blue-200 shadow-md"
                   : "bg-white border-gray-100 hover:shadow-lg"
               }`}
@@ -323,6 +343,11 @@ export function MembershipCategory({ user, onAddReservation }: MembershipCategor
               <p className="text-xs font-black uppercase text-blue-600 bg-blue-100 inline-flex px-3 py-1 rounded-full">
                 {space.totalUnits} {space.unitLabel}{space.totalUnits > 1 ? "s" : ""} Available
               </p>
+              {isRestricted && (
+                <p className="mt-3 text-xs font-bold text-gray-500">
+                  Private rooms are only available for student users.
+                </p>
+              )}
             </button>
           );
         })}

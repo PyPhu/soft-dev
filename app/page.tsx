@@ -9,12 +9,21 @@ import { ReservationSummary } from "./ui/reservation_summary";
 import { LogOut, FileText, ChevronLeft } from "lucide-react"; 
 import { useSession, signOut } from "next-auth/react"; 
 import { ProfilePage } from "./ui/profile_page";
+import { getRoleFromEmail } from "@/lib/user-role";
 
+type UserRole = "student" | "user";
+
+type CurrentUser = {
+  name: string;
+  email: string;
+  image?: string;
+  role: UserRole;
+};
 
 export default function Home() {
   const { data: session } = useSession();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [showSummary, setShowSummary] = useState(false);
@@ -30,6 +39,7 @@ export default function Home() {
         name: session.user.name || "",
         email: session.user.email || "",
         image: session.user.image || "",
+        role: ((session.user as { role?: UserRole }).role || getRoleFromEmail(session.user.email || "")) as UserRole,
       });
       setIsLoggedIn(true);
     }
@@ -206,6 +216,16 @@ export default function Home() {
                 {currentUser?.name?.split(' ')[0]}
               </span>
             </button>
+
+            <span
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-black border ${
+                currentUser?.role === "student"
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-gray-100 text-gray-600 border-gray-200"
+              }`}
+            >
+              {currentUser?.role === "student" ? "Student" : "User"}
+            </span>
 
             {/* Logout Button */}
             <button 

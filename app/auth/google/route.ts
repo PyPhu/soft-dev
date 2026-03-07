@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import { getRoleFromEmail } from "@/lib/user-role";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const jwtSecret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
@@ -51,20 +52,24 @@ export async function POST(req: Request) {
     await connectDB();
 
     let user = await User.findOne({ email: payload.email });
+    const role = getRoleFromEmail(payload.email);
     if (!user) {
       user = await User.create({
         name: payload.name || payload.email,
         email: payload.email,
         image: payload.picture || "",
+        role,
       });
     } else {
       const hasChanges =
         (!user.name && payload.name) ||
-        (!user.image && payload.picture);
+        (!user.image && payload.picture) ||
+        user.role !== role;
 
       if (hasChanges) {
         if (!user.name && payload.name) user.name = payload.name;
         if (!user.image && payload.picture) user.image = payload.picture;
+        if (user.role !== role) user.role = role;
         await user.save();
       }
     }
@@ -74,6 +79,7 @@ export async function POST(req: Request) {
         sub: String(user._id),
         email: user.email,
         name: user.name || "",
+        role,
       },
       jwtSecret,
       { expiresIn: "7d" }
@@ -85,6 +91,7 @@ export async function POST(req: Request) {
       user: {
         name: user.name || "",
         email: user.email,
+        role,
       },
     });
   } catch (error) {

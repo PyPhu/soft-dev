@@ -40,7 +40,7 @@ declare global {
 }
 
 interface LoginProps {
-  onLogin: (user: { name: string; email: string }) => void;
+  onLogin: (user: { name: string; email: string; role: "student" | "user" }) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
@@ -168,6 +168,9 @@ export function Login({ onLogin }: LoginProps) {
       if (!response.ok) {
         alert(data.message || "Something went wrong");
         return;
+      }
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
       }
       alert(data.message);
       onLogin(data.user);

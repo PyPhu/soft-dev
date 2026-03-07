@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import { getRoleFromEmail } from "@/lib/user-role";
 
 export async function POST(req: Request) {
   try {
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
     const user = await User.create({
       name,
       email,
+      role: getRoleFromEmail(email),
       password: hashedPassword,
       studentId,
     });
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
         user: {
           name: user.name,
           email: user.email,
+          role: user.role,
         },
       },
       { status: 201 }

@@ -7,6 +7,7 @@ import {
   formatBanEndDate,
   getBanValidation,
 } from "@/lib/reservation-penalty";
+import { getRoleFromEmail } from "@/lib/user-role";
 
 type HubId = "HM" | "KLLC";
 
@@ -80,6 +81,19 @@ export async function createCoworkingReservation(req: Request) {
     const config = spaceConfigs.find((space) => space.id === spaceId && space.hub === hub);
     if (!config) {
       return NextResponse.json({ message: "Invalid coworking location/space." }, { status: 400 });
+    }
+
+    const role = user.role || getRoleFromEmail(user.email || hostEmail);
+    if (user.role !== role) {
+      user.role = role;
+      await user.save();
+    }
+
+    if (config.name === "Private Room" && role !== "student") {
+      return NextResponse.json(
+        { message: "Only students can book private rooms" },
+        { status: 403 },
+      );
     }
 
     if (unitNumber < 1 || unitNumber > config.totalUnits) {

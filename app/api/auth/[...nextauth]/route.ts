@@ -2,6 +2,7 @@ import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import { getRoleFromEmail } from "@/lib/user-role";
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -20,6 +21,7 @@ const authOptions: NextAuthOptions = {
 
       try {
         await connectDB();
+        const role = getRoleFromEmail(user.email || "");
 
         const existingUser = await User.findOne({ email: user.email });
         if (!existingUser) {
@@ -27,10 +29,18 @@ const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             image: user.image,
+            role,
           });
-        } else if (!existingUser.image && user.image) {
-          existingUser.image = user.image;
-          await existingUser.save();
+        } else {
+          const hasChanges =
+            (!existingUser.image && user.image) ||
+            existingUser.role !== role;
+
+          if (hasChanges) {
+            if (!existingUser.image && user.image) existingUser.image = user.image;
+            if (existingUser.role !== role) existingUser.role = role;
+            await existingUser.save();
+          }
         }
 
         return true;
@@ -43,13 +53,17 @@ const authOptions: NextAuthOptions = {
       if (user?.email) {
         await connectDB();
         const dbUser = await User.findOne({ email: user.email });
-        if (dbUser) token.id = dbUser._id.toString();
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+          token.role = dbUser.role || getRoleFromEmail(dbUser.email || user.email);
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        (session.user as { id?: string }).id = String(token.id);
+        (session.user as { id?: string; role?: string }).id = String(token.id);
+        (session.user as { id?: string; role?: string }).role = String(token.role || "user");
       }
       return session;
     },

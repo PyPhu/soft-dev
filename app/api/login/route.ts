@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 import connectDB from "@/lib/mongodb"; // ✅ FIXED
 import User from "@/models/User";
+import { getRoleFromEmail } from "@/lib/user-role";
 
 export async function POST(req: Request) {
   try {
     await connectDB();
+    const jwtSecret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!jwtSecret) {
+      return NextResponse.json(
+        { message: "Missing JWT secret on server" },
+        { status: 500 }
+      );
+    }
 
     const { email, password } = await req.json();
 
@@ -35,9 +44,33 @@ export async function POST(req: Request) {
       );
     }
 
+    const role = getRoleFromEmail(user.email || email);
+    if (user.role !== role) {
+      user.role = role;
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      {
+        sub: String(user._id),
+        email: user.email,
+        name: user.name || "",
+        role,
+      },
+      jwtSecret,
+      { expiresIn: "7d" }
+    );
+
     return NextResponse.json({
       message: "Login success",
-      user,
+      token,
+      user: {
+        _id: String(user._id),
+        name: user.name || "",
+        email: user.email || email,
+        image: user.image || "",
+        role,
+      },
     });
 
   } catch (error) {

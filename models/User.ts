@@ -7,6 +7,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    role: {
+      type: String,
+      enum: ["student", "user"],
+      default: "user",
+    },
     password: String,
     image: String,
     dob: {
