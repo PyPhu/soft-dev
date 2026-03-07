@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Reservation from "@/models/Reservation";
 import Invitation from "@/models/Invitation";
@@ -6,15 +6,16 @@ import User from "@/models/User";
 import { applyCancellationPenalty } from "@/lib/reservation-penalty";
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { Id: string } },
+  request: NextRequest,
+  context: { params: Promise<{ Id: string }> },
 ) {
   try {
+    const { Id } = await context.params;
     await connectDB();
     const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
 
-    const reservation = await Reservation.findById(params.Id);
+    const reservation = await Reservation.findById(Id);
     if (!reservation) {
       return NextResponse.json(
         { message: "Reservation not found" },
@@ -23,11 +24,11 @@ export async function DELETE(
     }
 
     if (reservation.status !== "cancelled") {
-      await Reservation.findByIdAndUpdate(params.Id, {
+      await Reservation.findByIdAndUpdate(Id, {
         status: "cancelled",
         cancelledAt: new Date(),
       });
-      await Invitation.deleteMany({ reservation: params.Id });
+      await Invitation.deleteMany({ reservation: Id });
     }
 
     const user = await User.findOne(
